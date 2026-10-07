@@ -46,5 +46,6 @@ export default defineConfig([
     'docs/**',
     'referencia/**',
     'coverage/**',
+    'src/generated/**',
   ]),
 ]);

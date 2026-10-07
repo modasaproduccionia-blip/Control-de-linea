@@ -1,0 +1,349 @@
+// CONTROL DE LÍNEA — esquema PostgreSQL (PROMPT_MAESTRO §8 + DECISIONES.md).
+// Tablas y columnas en snake_case; modelos y campos en camelCase para TypeScript.
+// Índices únicos parciales (no soportados por Prisma) se crean con SQL en la migración inicial:
+//   - produccion (codigo_bus, estacion_codigo) WHERE estado <> 'ANULADO'
+//   - parada (produccion_id) WHERE hora_fin IS NULL
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Rol {
+  OPERARIO
+  SUPERVISOR
+  ADMIN
+}
+
+enum EstadoProduccion {
+  EN_PROCESO
+  PENDIENTE_ACTIVIDADES
+  PENDIENTE_INCIDENCIAS_TIEMPO
+  PENDIENTE_CAUSAS
+  COMPLETADO
+  ANULADO
+}
+
+enum TipoMotivo {
+  TIEMPO
+  PRODUCCION
+  AMBOS
+}
+
+enum TipoParada {
+  PIEZA
+  MATERIAL
+}
+
+model Cliente {
+  id           String       @id @default(uuid()) @db.Uuid
+  nombre       String       @unique
+  sigla        String       @unique
+  activo       Boolean      @default(true)
+  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+  producciones Produccion[]
+
+  @@map("cliente")
+}
+
+model Modelo {
+  id            String                @id @default(uuid()) @db.Uuid
+  codigo        String                @unique
+  activo        Boolean               @default(true)
+  createdAt     DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+  combinaciones ModeloLineaEstacion[]
+  actividades   ActividadEstandar[]
+  producciones  Produccion[]
+
+  @@map("modelo")
+}
+
+model Linea {
+  id              String                @id @default(uuid()) @db.Uuid
+  codigo          String                @unique
+  horaEstandarMin Int?                  @map("hora_estandar_min")
+  activo          Boolean               @default(true)
+  createdAt       DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+  estaciones      Estacion[]
+  combinaciones   ModeloLineaEstacion[]
+  responsables    ResponsableEstacion[]
+  actividades     ActividadEstandar[]
+  producciones    Produccion[]
+  usuarios        Usuario[]
+
+  @@map("linea")
+}
+
+model Estacion {
+  id            String                @id @default(uuid()) @db.Uuid
+  codigo        String
+  lineaId       String                @map("linea_id") @db.Uuid
+  activo        Boolean               @default(true)
+  createdAt     DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+  linea         Linea                 @relation(fields: [lineaId], references: [id])
+  combinaciones ModeloLineaEstacion[]
+  responsables  ResponsableEstacion[]
+  actividades   ActividadEstandar[]
+  producciones  Produccion[]
+
+  @@unique([codigo, lineaId])
+  @@map("estacion")
+}
+
+model ModeloLineaEstacion {
+  id         String   @id @default(uuid()) @db.Uuid
+  modeloId   String   @map("modelo_id") @db.Uuid
+  lineaId    String   @map("linea_id") @db.Uuid
+  estacionId String   @map("estacion_id") @db.Uuid
+  activo     Boolean  @default(true)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  modelo     Modelo   @relation(fields: [modeloId], references: [id])
+  linea      Linea    @relation(fields: [lineaId], references: [id])
+  estacion   Estacion @relation(fields: [estacionId], references: [id])
+
+  @@unique([modeloId, lineaId, estacionId])
+  @@map("modelo_linea_estacion")
+}
+
+model ResponsableEstacion {
+  id         String   @id @default(uuid()) @db.Uuid
+  lineaId    String   @map("linea_id") @db.Uuid
+  estacionId String   @map("estacion_id") @db.Uuid
+  nombre     String
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  linea      Linea    @relation(fields: [lineaId], references: [id])
+  estacion   Estacion @relation(fields: [estacionId], references: [id])
+
+  @@unique([lineaId, estacionId])
+  @@map("responsable_estacion")
+}
+
+model ActividadEstandar {
+  id            String             @id @default(uuid()) @db.Uuid
+  modeloId      String             @map("modelo_id") @db.Uuid
+  lineaId       String             @map("linea_id") @db.Uuid
+  estacionId    String             @map("estacion_id") @db.Uuid
+  nombre        String
+  // Decimal: el Excel trae minutos con decimales (DECISIONES 2026-10-07).
+  minutos       Decimal            @db.Decimal(10, 2)
+  orden         Int
+  // Marcada si el minuto parece un valor provisional (exactamente 100 en el Excel).
+  esProvisional Boolean            @default(false) @map("es_provisional")
+  activo        Boolean            @default(true)
+  createdAt     DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+  modelo        Modelo             @relation(fields: [modeloId], references: [id])
+  linea         Linea              @relation(fields: [lineaId], references: [id])
+  estacion      Estacion           @relation(fields: [estacionId], references: [id])
+  controles     ControlActividad[]
+
+  @@unique([modeloId, lineaId, estacionId, nombre])
+  @@index([modeloId, lineaId, estacionId])
+  @@map("actividad_estandar")
+}
+
+model Motivo {
+  id          String                @id @default(uuid()) @db.Uuid
+  nombre      String                @unique
+  tipo        TipoMotivo            @default(AMBOS)
+  activo      Boolean               @default(true)
+  createdAt   DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+  incidencias IncidenciaTiempo[]
+  causas      CausaIncumplimiento[]
+
+  @@map("motivo")
+}
+
+/// Ventana laboral por día (1 = lunes … 7 = domingo). Horas "HH:MM" en America/Lima.
+model JornadaDia {
+  diaSemana Int      @id @map("dia_semana")
+  laborable Boolean
+  entrada   String?
+  salida    String?
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("jornada_dia")
+}
+
+model JornadaConfig {
+  id             Int      @id @default(1)
+  almuerzoInicio String   @map("almuerzo_inicio")
+  almuerzoFin    String   @map("almuerzo_fin")
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("jornada_config")
+}
+
+model DetalleParada {
+  id                 String     @id @default(uuid()) @db.Uuid
+  tipo               TipoParada
+  nombre             String
+  requiereComentario Boolean    @default(false) @map("requiere_comentario")
+  // Catálogo inicial de ejemplo, pendiente de validar por el usuario.
+  esEjemplo          Boolean    @default(false) @map("es_ejemplo")
+  orden              Int        @default(0)
+  activo             Boolean    @default(true)
+  createdAt          DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  paradas            Parada[]
+
+  @@unique([tipo, nombre])
+  @@map("detalle_parada")
+}
+
+model Usuario {
+  id               String    @id @default(uuid()) @db.Uuid
+  codigo           String    @unique
+  nombre           String
+  pinHash          String    @map("pin_hash")
+  rol              Rol       @default(OPERARIO)
+  // Línea del operario: limita los indicadores que ve.
+  lineaId          String?   @map("linea_id") @db.Uuid
+  activo           Boolean   @default(true)
+  intentosFallidos Int       @default(0) @map("intentos_fallidos")
+  bloqueadoHasta   DateTime? @map("bloqueado_hasta") @db.Timestamptz(3)
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  linea            Linea?    @relation(fields: [lineaId], references: [id])
+
+  @@map("usuario")
+}
+
+model Produccion {
+  id                 String                @id @default(uuid()) @db.Uuid
+  fechaProduccion    DateTime              @map("fecha_produccion") @db.Date
+  clienteId          String                @map("cliente_id") @db.Uuid
+  modeloId           String                @map("modelo_id") @db.Uuid
+  lineaId            String                @map("linea_id") @db.Uuid
+  estacionId         String                @map("estacion_id") @db.Uuid
+  // Copia del código de estación: la regla de duplicados compara el código, sin importar la línea.
+  estacionCodigo     String                @map("estacion_codigo")
+  numeroBus          String                @map("numero_bus") @db.Char(3)
+  codigoBus          String                @map("codigo_bus")
+  responsableNombre  String?               @map("responsable_nombre")
+  horaInicio         DateTime              @map("hora_inicio") @db.Timestamptz(3)
+  horaFin            DateTime?             @map("hora_fin") @db.Timestamptz(3)
+  horaEstandarMin    Int                   @map("hora_estandar_min")
+  // Jornada vigente al iniciar (snapshot, DECISIONES 2026-10-07).
+  jornadaSnapshot    Json                  @map("jornada_snapshot")
+  duracionRealMin    Int?                  @map("duracion_real_min")
+  minutosLaborales   Int?                  @map("minutos_laborales")
+  duracionLaboralMin Int?                  @map("duracion_laboral_min")
+  sobretiempoMin     Int?                  @map("sobretiempo_min")
+  cumpleTiempo       Boolean?              @map("cumple_tiempo")
+  minutosParada      Int?                  @map("minutos_parada")
+  avancePct          Decimal?              @map("avance_pct") @db.Decimal(5, 1)
+  minutosNoCumplidos Int?                  @map("minutos_no_cumplidos")
+  estado             EstadoProduccion      @default(EN_PROCESO)
+  iniciadoPorId      String                @map("iniciado_por") @db.Uuid
+  finalizadoPorId    String?               @map("finalizado_por") @db.Uuid
+  idempotencyKey     String?               @unique @map("idempotency_key")
+  motivoAnulacion    String?               @map("motivo_anulacion")
+  esDemo             Boolean               @default(false) @map("es_demo")
+  version            Int                   @default(0)
+  createdAt          DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+  cliente            Cliente               @relation(fields: [clienteId], references: [id])
+  modelo             Modelo                @relation(fields: [modeloId], references: [id])
+  linea              Linea                 @relation(fields: [lineaId], references: [id])
+  estacion           Estacion              @relation(fields: [estacionId], references: [id])
+  paradas            Parada[]
+  actividades        ControlActividad[]
+  incidencias        IncidenciaTiempo[]
+  causas             CausaIncumplimiento[]
+
+  @@index([fechaProduccion])
+  @@index([estado])
+  @@index([lineaId, estacionId])
+  @@map("produccion")
+}
+
+model Parada {
+  id                 String        @id @default(uuid()) @db.Uuid
+  produccionId       String        @map("produccion_id") @db.Uuid
+  tipo               TipoParada
+  detalleParadaId    String        @map("detalle_parada_id") @db.Uuid
+  detalleNombre      String        @map("detalle_nombre")
+  comentario         String?       @db.VarChar(300)
+  horaInicio         DateTime      @map("hora_inicio") @db.Timestamptz(3)
+  horaFin            DateTime?     @map("hora_fin") @db.Timestamptz(3)
+  duracionRealMin    Int?          @map("duracion_real_min")
+  duracionLaboralMin Int?          @map("duracion_laboral_min")
+  registradoPorId    String        @map("registrado_por") @db.Uuid
+  idempotencyKey     String?       @unique @map("idempotency_key")
+  createdAt          DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  produccion         Produccion    @relation(fields: [produccionId], references: [id], onDelete: Cascade)
+  detalle            DetalleParada @relation(fields: [detalleParadaId], references: [id])
+
+  @@index([produccionId])
+  @@map("parada")
+}
+
+model ControlActividad {
+  id                  String            @id @default(uuid()) @db.Uuid
+  produccionId        String            @map("produccion_id") @db.Uuid
+  actividadEstandarId String            @map("actividad_estandar_id") @db.Uuid
+  actividadNombre     String            @map("actividad_nombre")
+  minutos             Decimal           @db.Decimal(10, 2)
+  realizada           Boolean
+  createdAt           DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  produccion          Produccion        @relation(fields: [produccionId], references: [id], onDelete: Cascade)
+  actividad           ActividadEstandar @relation(fields: [actividadEstandarId], references: [id])
+
+  @@unique([produccionId, actividadEstandarId])
+  @@map("control_actividad")
+}
+
+model IncidenciaTiempo {
+  id               String     @id @default(uuid()) @db.Uuid
+  produccionId     String     @map("produccion_id") @db.Uuid
+  motivoId         String     @map("motivo_id") @db.Uuid
+  motivoNombre     String     @map("motivo_nombre")
+  porcentaje       Int
+  tiempoImpactoMin Decimal    @map("tiempo_impacto_min") @db.Decimal(10, 2)
+  createdAt        DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  produccion       Produccion @relation(fields: [produccionId], references: [id], onDelete: Cascade)
+  motivo           Motivo     @relation(fields: [motivoId], references: [id])
+
+  @@index([produccionId])
+  @@map("incidencia_tiempo")
+}
+
+model CausaIncumplimiento {
+  id               String     @id @default(uuid()) @db.Uuid
+  produccionId     String     @map("produccion_id") @db.Uuid
+  motivoId         String     @map("motivo_id") @db.Uuid
+  motivoNombre     String     @map("motivo_nombre")
+  ordenImportancia Int        @map("orden_importancia")
+  pesoAsignado     Int        @map("peso_asignado")
+  minutosImpacto   Int        @map("minutos_impacto")
+  createdAt        DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  produccion       Produccion @relation(fields: [produccionId], references: [id], onDelete: Cascade)
+  motivo           Motivo     @relation(fields: [motivoId], references: [id])
+
+  @@index([produccionId])
+  @@map("causa_incumplimiento")
+}
+
+model Auditoria {
+  id        String   @id @default(uuid()) @db.Uuid
+  entidad   String
+  entidadId String   @map("entidad_id")
+  accion    String
+  antes     Json?
+  despues   Json?
+  usuarioId String?  @map("usuario_id") @db.Uuid
+  fecha     DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([entidad, entidadId])
+  @@map("auditoria")
+}
