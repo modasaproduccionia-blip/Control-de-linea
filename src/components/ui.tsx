@@ -48,7 +48,9 @@ export function Providers({ children }: { children: ReactNode }) {
   }, []);
 
   const dlg = useRef<HTMLDialogElement>(null);
-  const [conf, setConf] = useState<(OpcionesConfirmar & { resolver: (v: boolean) => void }) | null>(null);
+  const [conf, setConf] = useState<(OpcionesConfirmar & { resolver: (v: boolean) => void }) | null>(
+    null,
+  );
   const confirmar = useCallback(
     (o: OpcionesConfirmar) => new Promise<boolean>((resolver) => setConf({ ...o, resolver })),
     [],
@@ -70,7 +72,8 @@ export function Providers({ children }: { children: ReactNode }) {
         <ConfirmCtx.Provider value={confirmar}>
           {sinConexion && (
             <div className="offline" role="alert">
-              Sin conexión: el tiempo sigue contando, pero no se puede guardar hasta que vuelva el Wi-Fi.
+              Sin conexión: el tiempo sigue contando, pero no se puede guardar hasta que vuelva el
+              Wi-Fi.
             </div>
           )}
           {children}
@@ -83,7 +86,11 @@ export function Providers({ children }: { children: ReactNode }) {
                   <button type="button" className="btn btn-ghost" onClick={() => cerrar(false)}>
                     Cancelar
                   </button>
-                  <button type="button" className={`btn ${conf.clase ?? 'btn-blue'}`} onClick={() => cerrar(true)}>
+                  <button
+                    type="button"
+                    className={`btn ${conf.clase ?? 'btn-blue'}`}
+                    onClick={() => cerrar(true)}
+                  >
                     {conf.ok}
                   </button>
                 </div>

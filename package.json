@@ -25,7 +25,8 @@
     "db:import": "tsx scripts/import-excel.ts referencia/REGISTRO_CL0510.xlsx",
     "db:import:dry": "tsx scripts/import-excel.ts referencia/REGISTRO_CL0510.xlsx --dry-run",
     "db:demo": "tsx scripts/demo-data.ts",
-    "usuario:crear": "tsx scripts/crear-usuario.ts"
+    "usuario:crear": "tsx scripts/crear-usuario.ts",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@date-fns/tz": "^1.5.0",
@@ -45,6 +46,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^22.20.5",
     "@types/pg": "^8.23.1",

@@ -74,7 +74,10 @@ async function main() {
   for (const f of hoja('TB_PARAMETROS_LINEA')) {
     const codigo = limpiar(f.Linea);
     const std = Number(limpiar(f.HoraEstandar));
-    lineas.set(clave(codigo), { codigo, horaEstandarMin: Number.isFinite(std) ? Math.round(std) : null });
+    lineas.set(clave(codigo), {
+      codigo,
+      horaEstandarMin: Number.isFinite(std) ? Math.round(std) : null,
+    });
   }
 
   const modelos = new Map<string, string>();
@@ -128,12 +131,20 @@ async function main() {
     responsables.set(clave(linea, estacion), { linea, estacion, nombre });
   }
   for (const [k, e] of estaciones) {
-    if (!responsables.has(k)) aviso(`Sin responsable: ${e.linea}/${e.codigo} (se mostrará "Sin responsable asignado")`);
+    if (!responsables.has(k))
+      aviso(`Sin responsable: ${e.linea}/${e.codigo} (se mostrará "Sin responsable asignado")`);
   }
 
   const actividades = new Map<
     string,
-    { modelo: string; linea: string; estacion: string; nombre: string; minutos: number; orden: number }
+    {
+      modelo: string;
+      linea: string;
+      estacion: string;
+      nombre: string;
+      minutos: number;
+      orden: number;
+    }
   >();
   const ordenPorCombo = new Map<string, number>();
   let provisionales = 0;
@@ -146,16 +157,23 @@ async function main() {
     const minutos = Math.round(Number(limpiar(f.minutos)) * 100) / 100;
     const kc = clave(modelo, linea, estacion);
     if (!combos.has(kc)) {
-      huerfanas.set(`${modelo}/${linea}/${estacion}`, (huerfanas.get(`${modelo}/${linea}/${estacion}`) ?? 0) + 1);
+      huerfanas.set(
+        `${modelo}/${linea}/${estacion}`,
+        (huerfanas.get(`${modelo}/${linea}/${estacion}`) ?? 0) + 1,
+      );
       continue;
     }
     if (!nombre || !Number.isFinite(minutos) || minutos <= 0) {
-      aviso(`TB_ACTIVIDADES: actividad inválida en ${modelo}/${linea}/${estacion}: "${nombre}" (${limpiar(f.minutos)}) — omitida`);
+      aviso(
+        `TB_ACTIVIDADES: actividad inválida en ${modelo}/${linea}/${estacion}: "${nombre}" (${limpiar(f.minutos)}) — omitida`,
+      );
       continue;
     }
     const k = clave(modelo, linea, estacion, nombre);
     if (actividades.has(k)) {
-      aviso(`TB_ACTIVIDADES: duplicada ${modelo}/${linea}/${estacion} "${nombre}" — se importa una sola vez`);
+      aviso(
+        `TB_ACTIVIDADES: duplicada ${modelo}/${linea}/${estacion} "${nombre}" — se importa una sola vez`,
+      );
       continue;
     }
     const orden = (ordenPorCombo.get(kc) ?? 0) + 1;
@@ -164,12 +182,16 @@ async function main() {
     actividades.set(k, { modelo, linea, estacion, nombre, minutos, orden });
   }
   for (const [c, n] of huerfanas) {
-    aviso(`TB_ACTIVIDADES: ${n} actividades de ${c}, combinación que no existe en TB_ESTACIONES — omitidas`);
+    aviso(
+      `TB_ACTIVIDADES: ${n} actividades de ${c}, combinación que no existe en TB_ESTACIONES — omitidas`,
+    );
   }
   for (const [k, c] of combos) {
-    if (!ordenPorCombo.has(k)) aviso(`Sin actividades: ${c.modelo}/${c.linea}/${c.estacion} (no se podrá INICIAR)`);
+    if (!ordenPorCombo.has(k))
+      aviso(`Sin actividades: ${c.modelo}/${c.linea}/${c.estacion} (no se podrá INICIAR)`);
   }
-  if (provisionales) aviso(`${provisionales} actividades con exactamente 100 min: se marcan como provisionales`);
+  if (provisionales)
+    aviso(`${provisionales} actividades con exactamente 100 min: se marcan como provisionales`);
 
   const motivos = new Map<string, string>();
   for (const f of hoja('TB_MOTIVOS')) {
@@ -179,7 +201,8 @@ async function main() {
       aviso(`TB_MOTIVOS: se omite el placeholder "${nombre}"`);
       continue;
     }
-    if (/[a-záéíóúñ][ÁÉÍÓÚ]/.test(nombre)) aviso(`TB_MOTIVOS: posible tilde mal escrita en "${nombre}" (se importa tal cual)`);
+    if (/[a-záéíóúñ][ÁÉÍÓÚ]/.test(nombre))
+      aviso(`TB_MOTIVOS: posible tilde mal escrita en "${nombre}" (se importa tal cual)`);
     if (motivos.has(nombre.toLowerCase())) continue;
     motivos.set(nombre.toLowerCase(), nombre);
   }
@@ -252,7 +275,11 @@ async function main() {
           });
         }
         for (const c of clientes.values()) {
-          await tx.cliente.upsert({ where: { nombre: c.nombre }, create: c, update: { sigla: c.sigla } });
+          await tx.cliente.upsert({
+            where: { nombre: c.nombre },
+            create: c,
+            update: { sigla: c.sigla },
+          });
         }
         for (const r of responsables.values()) {
           const lineaId = idLinea.get(clave(r.linea))!;
@@ -271,12 +298,27 @@ async function main() {
           };
           await tx.actividadEstandar.upsert({
             where: { modeloId_lineaId_estacionId_nombre: { ...ids, nombre: a.nombre } },
-            create: { ...ids, nombre: a.nombre, minutos: a.minutos, orden: a.orden, esProvisional: a.minutos === 100 },
-            update: { minutos: a.minutos, orden: a.orden, esProvisional: a.minutos === 100, activo: true },
+            create: {
+              ...ids,
+              nombre: a.nombre,
+              minutos: a.minutos,
+              orden: a.orden,
+              esProvisional: a.minutos === 100,
+            },
+            update: {
+              minutos: a.minutos,
+              orden: a.orden,
+              esProvisional: a.minutos === 100,
+              activo: true,
+            },
           });
         }
         for (const nombre of motivos.values()) {
-          await tx.motivo.upsert({ where: { nombre }, create: { nombre, tipo: 'AMBOS' }, update: {} });
+          await tx.motivo.upsert({
+            where: { nombre },
+            create: { nombre, tipo: 'AMBOS' },
+            update: {},
+          });
         }
       },
       { timeout: 120_000 },

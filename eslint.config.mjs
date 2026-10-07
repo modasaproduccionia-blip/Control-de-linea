@@ -17,6 +17,11 @@ export default defineConfig([
     },
   },
   {
+    // Scripts de terminal (importador, semilla, usuarios): imprimir es su salida.
+    files: ['scripts/**/*.ts', 'prisma/**/*.ts'],
+    rules: { 'no-console': 'off' },
+  },
+  {
     // El dominio debe ser puro: sin I/O, sin React, sin Next, sin Prisma.
     files: ['src/domain/**/*.ts'],
     rules: {

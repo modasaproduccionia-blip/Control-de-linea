@@ -41,7 +41,11 @@ export const causasSchema = z.object({
 });
 
 export const anularSchema = z.object({
-  motivo: z.string().trim().min(5, 'Indique el motivo de la anulación (mín. 5 caracteres)').max(300),
+  motivo: z
+    .string()
+    .trim()
+    .min(5, 'Indique el motivo de la anulación (mín. 5 caracteres)')
+    .max(300),
 });
 
 export const filtrosIndicadoresSchema = z.object({

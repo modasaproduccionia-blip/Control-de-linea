@@ -23,7 +23,12 @@ export function ruta<P = Record<string, string>>(
     try {
       const sesion = await requerirSesion(opciones.roles);
       const params = (await segment?.params) ?? ({} as P);
-      const data = await handler({ req, params, sesion, log: log.child({ usuario: sesion.codigo }) });
+      const data = await handler({
+        req,
+        params,
+        sesion,
+        log: log.child({ usuario: sesion.codigo }),
+      });
       if (data instanceof Response) return data;
       return NextResponse.json(data ?? { ok: true }, {
         headers: { [REQUEST_ID_HEADER]: requestId, 'cache-control': 'no-store' },

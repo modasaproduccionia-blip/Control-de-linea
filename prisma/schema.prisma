@@ -1,7 +1,7 @@
 // CONTROL DE LÍNEA — esquema PostgreSQL (PROMPT_MAESTRO §8 + DECISIONES.md).
 // Tablas y columnas en snake_case; modelos y campos en camelCase para TypeScript.
 // Índices únicos parciales (no soportados por Prisma) se crean con SQL en la migración inicial:
-//   - produccion (codigo_bus, estacion_codigo) WHERE estado <> 'ANULADO'
+//   - produccion (codigo_bus, estacion_codigo) WHERE estado <> 'ANULADO' AND NOT es_demo
 //   - parada (produccion_id) WHERE hora_fin IS NULL
 
 generator client {

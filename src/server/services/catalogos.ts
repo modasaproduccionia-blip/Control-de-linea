@@ -10,7 +10,10 @@ export async function cargarJornada(): Promise<Jornada> {
   if (dias.length !== 7 || !cfg) {
     throw new Error('La jornada laboral no está configurada (ejecute npm run db:seed).');
   }
-  const jornada: Jornada = { dias: {}, almuerzo: { inicio: cfg.almuerzoInicio, fin: cfg.almuerzoFin } };
+  const jornada: Jornada = {
+    dias: {},
+    almuerzo: { inicio: cfg.almuerzoInicio, fin: cfg.almuerzoFin },
+  };
   for (const d of dias) {
     jornada.dias[d.diaSemana] =
       d.laborable && d.entrada && d.salida ? { entrada: d.entrada, salida: d.salida } : null;
@@ -21,16 +24,27 @@ export async function cargarJornada(): Promise<Jornada> {
 /** Todo lo que necesita el Paso 1 en una sola respuesta (catálogos pequeños). */
 export async function catalogoSeleccion() {
   const [clientes, combos, responsables, conActividades] = await Promise.all([
-    prisma.cliente.findMany({ where: { activo: true }, orderBy: { nombre: 'asc' }, select: { id: true, nombre: true, sigla: true } }),
+    prisma.cliente.findMany({
+      where: { activo: true },
+      orderBy: { nombre: 'asc' },
+      select: { id: true, nombre: true, sigla: true },
+    }),
     prisma.modeloLineaEstacion.findMany({
-      where: { activo: true, modelo: { activo: true }, linea: { activo: true }, estacion: { activo: true } },
+      where: {
+        activo: true,
+        modelo: { activo: true },
+        linea: { activo: true },
+        estacion: { activo: true },
+      },
       select: {
         modelo: { select: { id: true, codigo: true } },
         linea: { select: { id: true, codigo: true, horaEstandarMin: true } },
         estacion: { select: { id: true, codigo: true } },
       },
     }),
-    prisma.responsableEstacion.findMany({ select: { lineaId: true, estacionId: true, nombre: true } }),
+    prisma.responsableEstacion.findMany({
+      select: { lineaId: true, estacionId: true, nombre: true },
+    }),
     prisma.actividadEstandar.groupBy({
       by: ['modeloId', 'lineaId', 'estacionId'],
       where: { activo: true },
@@ -54,7 +68,10 @@ export async function catalogoSeleccion() {
         responsable: resp.get(`${c.linea.id}|${c.estacion.id}`) ?? null,
         tieneActividades: conAct.has(`${c.modelo.id}|${c.linea.id}|${c.estacion.id}`),
       }))
-      .sort((a, b) => orden(a.modelo, b.modelo) || orden(a.linea, b.linea) || orden(a.estacion, b.estacion)),
+      .sort(
+        (a, b) =>
+          orden(a.modelo, b.modelo) || orden(a.linea, b.linea) || orden(a.estacion, b.estacion),
+      ),
   };
 }
 

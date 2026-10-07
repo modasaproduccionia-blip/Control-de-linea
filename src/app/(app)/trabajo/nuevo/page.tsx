@@ -25,14 +25,19 @@ interface Catalogo {
   combinaciones: Combo[];
 }
 
-const unicos = <T,>(xs: T[], k: (x: T) => string) => [...new Map(xs.map((x) => [k(x), x])).values()];
+const unicos = <T,>(xs: T[], k: (x: T) => string) => [
+  ...new Map(xs.map((x) => [k(x), x])).values(),
+];
 
 /** Paso 1: Cliente → Modelo → Línea → Estación → Nº de bus. */
 export default function NuevoTrabajo() {
   const router = useRouter();
   const toast = useToast();
   const confirmar = useConfirmar();
-  const cat = useQuery({ queryKey: ['catalogo-seleccion'], queryFn: () => api<Catalogo>('/catalogos/seleccion') });
+  const cat = useQuery({
+    queryKey: ['catalogo-seleccion'],
+    queryFn: () => api<Catalogo>('/catalogos/seleccion'),
+  });
 
   const [clienteId, setClienteId] = useState('');
   const [busqueda, setBusqueda] = useState('');
@@ -86,7 +91,8 @@ export default function NuevoTrabajo() {
 
   const iniciar = async () => {
     if (!cliente || !combo) return setError('Complete todos los campos');
-    if (!esNumeroBusValido(numero)) return setError('Debe ingresar exactamente 3 dígitos. Ejemplo: 001');
+    if (!esNumeroBusValido(numero))
+      return setError('Debe ingresar exactamente 3 dígitos. Ejemplo: 001');
     const body = { clienteId, modeloId, lineaId, estacionId, numeroBus: numero };
     try {
       await api('/producciones/validar-inicio', { method: 'POST', body });
@@ -286,7 +292,12 @@ export default function NuevoTrabajo() {
         <Link href="/" className="btn btn-ghost" style={{ flex: '0 0 auto' }}>
           Volver
         </Link>
-        <button type="button" className="btn btn-xl btn-blue" disabled={!listo || enviando} onClick={iniciar}>
+        <button
+          type="button"
+          className="btn btn-xl btn-blue"
+          disabled={!listo || enviando}
+          onClick={iniciar}
+        >
           {enviando ? 'Iniciando…' : 'Iniciar'}
         </button>
       </BarraAcciones>

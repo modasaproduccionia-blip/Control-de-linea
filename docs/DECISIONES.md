@@ -28,3 +28,8 @@ Aquí se anota cada decisión de negocio confirmada por el usuario. Claude Code 
 | 2026-10-07 | Colores | Sin verde: INICIAR en azul; "Agregar motivo" en azul secundario. | Usuario (aceptó recomendación Fase 1) |
 | 2026-10-07 | Snapshot de jornada | Cada producción guarda copia de la jornada usada para calcular, para que cambios futuros no alteren el histórico. | Usuario (aceptó recomendación Fase 1) |
 | 2026-10-07 | Correcciones al original | Se corrigen: texto "Valor de tiempo" (redondear antes de separar h/min) y el toast de incidencias se muestra después de guardar. | Usuario (aceptó recomendación Fase 1) |
+| 2026-10-07 | Construcción completa | El usuario pidió la aplicación completa ("quiero que me des la aplicación"): se ejecutaron las fases 3 a 7 sin pausas intermedias. | Usuario |
+| 2026-10-07 | Autenticación | Sesión propia (JWT HS256 en cookie httpOnly, `jose`) en lugar de Auth.js (aún en beta para Next 16). Capa desacoplada en `src/server/auth/` para migrar a Entra ID. | Implementación (revisable) |
+| 2026-10-07 | Datos de demostración | Los registros `es_demo` no cuentan para la regla de duplicados (índice parcial), no aparecen en Trabajos en curso ni en Registros/exportación; el panel avisa cuando los incluye. | Implementación |
+| 2026-10-07 | Pantalla Supervisor | Se incluyó un mínimo necesario para la decisión de retrabajo: listado, anular con motivo (auditado) y exportar .xlsx con columnas originales. Corrección de horas y CRUD de catálogos siguen pendientes de aprobación. | Implementación (revisable) |
+| 2026-10-07 | Actividades huérfanas | Las actividades de combinaciones inexistentes (ZEUS5/L2/E20, APOLO X/L2/MF PAQUETERA) no se importan; el importador las reporta. | Implementación (revisable) |

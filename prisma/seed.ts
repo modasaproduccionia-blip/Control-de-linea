@@ -33,8 +33,16 @@ async function main() {
   try {
     for (let dia = 1; dia <= 7; dia++) {
       const v = JORNADA_POR_DEFECTO.dias[dia] ?? null;
-      const data = { laborable: v !== null, entrada: v?.entrada ?? null, salida: v?.salida ?? null };
-      await prisma.jornadaDia.upsert({ where: { diaSemana: dia }, create: { diaSemana: dia, ...data }, update: {} });
+      const data = {
+        laborable: v !== null,
+        entrada: v?.entrada ?? null,
+        salida: v?.salida ?? null,
+      };
+      await prisma.jornadaDia.upsert({
+        where: { diaSemana: dia },
+        create: { diaSemana: dia, ...data },
+        update: {},
+      });
     }
     await prisma.jornadaConfig.upsert({
       where: { id: 1 },
@@ -50,7 +58,13 @@ async function main() {
       for (const [orden, nombre] of DETALLES_PARADA[tipo].entries()) {
         await prisma.detalleParada.upsert({
           where: { tipo_nombre: { tipo, nombre } },
-          create: { tipo, nombre, orden, esEjemplo: true, requiereComentario: nombre.startsWith('Otr') },
+          create: {
+            tipo,
+            nombre,
+            orden,
+            esEjemplo: true,
+            requiereComentario: nombre.startsWith('Otr'),
+          },
           update: {},
         });
       }
@@ -62,14 +76,26 @@ async function main() {
     const usuarios = [
       { codigo: '1000', nombre: 'Administrador', rol: 'ADMIN' as const, lineaId: null },
       { codigo: '2000', nombre: 'Supervisor de línea', rol: 'SUPERVISOR' as const, lineaId: null },
-      { codigo: '3000', nombre: 'Operario de prueba', rol: 'OPERARIO' as const, lineaId: l2?.id ?? null },
+      {
+        codigo: '3000',
+        nombre: 'Operario de prueba',
+        rol: 'OPERARIO' as const,
+        lineaId: l2?.id ?? null,
+      },
     ];
     const pinHash = await bcrypt.hash(pin, 10);
     for (const u of usuarios) {
-      await prisma.usuario.upsert({ where: { codigo: u.codigo }, create: { ...u, pinHash }, update: {} });
+      await prisma.usuario.upsert({
+        where: { codigo: u.codigo },
+        create: { ...u, pinHash },
+        update: {},
+      });
     }
-    console.log('Semilla aplicada: jornada, detalles de parada (ejemplo) y usuarios 1000/2000/3000.');
-    if (!process.env.SEED_PIN) console.warn('AVISO: los usuarios iniciales usan PIN 1234. Cámbielos antes de producción.');
+    console.log(
+      'Semilla aplicada: jornada, detalles de parada (ejemplo) y usuarios 1000/2000/3000.',
+    );
+    if (!process.env.SEED_PIN)
+      console.warn('AVISO: los usuarios iniciales usan PIN 1234. Cámbielos antes de producción.');
   } finally {
     await prisma.$disconnect();
   }

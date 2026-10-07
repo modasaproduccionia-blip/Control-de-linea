@@ -33,7 +33,10 @@ export function IncidenciasTiempo({ p, recargar }: { p: ProduccionDTO; recargar:
     const items = filas.map(({ motivoId, porcentaje }) => ({ motivoId, porcentaje }));
     const error = validarIncidencias(items);
     if (error) return toast(error, 'er');
-    const ok = await confirmar({ titulo: '¿Confirmas el registro de incidencias de tiempo?', ok: 'Registrar' });
+    const ok = await confirmar({
+      titulo: '¿Confirmas el registro de incidencias de tiempo?',
+      ok: 'Registrar',
+    });
     if (!ok) return toast('Registro cancelado', 'in');
     setEnviando(true);
     try {
@@ -79,7 +82,9 @@ export function IncidenciasTiempo({ p, recargar }: { p: ProduccionDTO; recargar:
                 </option>
               ))}
             </select>
-            <div className="sub">Valor de tiempo = {formatoHorasMin((f.porcentaje / 100) * sobre)}</div>
+            <div className="sub">
+              Valor de tiempo = {formatoHorasMin((f.porcentaje / 100) * sobre)}
+            </div>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <div className="stepper">
@@ -124,7 +129,12 @@ export function IncidenciasTiempo({ p, recargar }: { p: ProduccionDTO; recargar:
         <span>{suma}%</span>
       </div>
       <BarraAcciones>
-        <button type="button" className="btn btn-xl btn-blue" disabled={enviando} onClick={registrar}>
+        <button
+          type="button"
+          className="btn btn-xl btn-blue"
+          disabled={enviando}
+          onClick={registrar}
+        >
           Registrar
         </button>
       </BarraAcciones>

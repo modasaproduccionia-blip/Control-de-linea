@@ -53,6 +53,7 @@ export async function sesionActual(): Promise<Sesion | null> {
 export async function requerirSesion(roles?: Rol[]): Promise<Sesion> {
   const s = await sesionActual();
   if (!s) throw new AppError('NO_AUTENTICADO', 'Su sesión terminó. Vuelva a ingresar.');
-  if (roles && !roles.includes(s.rol)) throw new AppError('PROHIBIDO', 'No tiene permiso para esta acción.');
+  if (roles && !roles.includes(s.rol))
+    throw new AppError('PROHIBIDO', 'No tiene permiso para esta acción.');
   return s;
 }

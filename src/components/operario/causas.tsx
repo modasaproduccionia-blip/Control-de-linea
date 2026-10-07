@@ -36,11 +36,17 @@ export function Causas({ p, recargar }: { p: ProduccionDTO; recargar: () => void
     const ids = filas.map((f) => f.motivoId);
     const error = validarCausas(ids);
     if (error) return toast(error, 'er');
-    const ok = await confirmar({ titulo: '¿Confirmas el registro de causas de incumplimiento?', ok: 'Registrar' });
+    const ok = await confirmar({
+      titulo: '¿Confirmas el registro de causas de incumplimiento?',
+      ok: 'Registrar',
+    });
     if (!ok) return toast('Registro cancelado', 'in');
     setEnviando(true);
     try {
-      await api(`/producciones/${p.id}/causas`, { method: 'POST', body: { items: ids.map((motivoId) => ({ motivoId })) } });
+      await api(`/producciones/${p.id}/causas`, {
+        method: 'POST',
+        body: { items: ids.map((motivoId) => ({ motivoId })) },
+      });
       toast('Registro guardado correctamente');
     } catch (e) {
       toast((e as Error).message, 'er');
@@ -53,7 +59,9 @@ export function Causas({ p, recargar }: { p: ProduccionDTO; recargar: () => void
     <div className="narrow">
       <Pasos actual={5} />
       <h1>Se dejaron de ejecutar {minutos} minutos de trabajo</h1>
-      <p className="lead">¿Cuáles fueron las principales causas? Ordénalas de la más importante a la menos importante.</p>
+      <p className="lead">
+        ¿Cuáles fueron las principales causas? Ordénalas de la más importante a la menos importante.
+      </p>
       {filas.map((f, i) => (
         <div className="erow" key={f.key}>
           <span className="n">{i + 1}</span>
@@ -62,7 +70,9 @@ export function Causas({ p, recargar }: { p: ProduccionDTO; recargar: () => void
               aria-label={`Causa ${i + 1}`}
               value={f.motivoId}
               onChange={(e) =>
-                setFilas((fs) => fs.map((x) => (x.key === f.key ? { ...x, motivoId: e.target.value } : x)))
+                setFilas((fs) =>
+                  fs.map((x) => (x.key === f.key ? { ...x, motivoId: e.target.value } : x)),
+                )
               }
             >
               <option value="">Elige una causa</option>
@@ -77,7 +87,13 @@ export function Causas({ p, recargar }: { p: ProduccionDTO; recargar: () => void
             </div>
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
-            <button type="button" className="icon-btn" aria-label="Subir" disabled={i === 0} onClick={() => mover(i, -1)}>
+            <button
+              type="button"
+              className="icon-btn"
+              aria-label="Subir"
+              disabled={i === 0}
+              onClick={() => mover(i, -1)}
+            >
               ↑
             </button>
             <button
@@ -110,7 +126,12 @@ export function Causas({ p, recargar }: { p: ProduccionDTO; recargar: () => void
         + Agregar causa
       </button>
       <BarraAcciones>
-        <button type="button" className="btn btn-xl btn-blue" disabled={enviando} onClick={registrar}>
+        <button
+          type="button"
+          className="btn btn-xl btn-blue"
+          disabled={enviando}
+          onClick={registrar}
+        >
           Registrar
         </button>
       </BarraAcciones>

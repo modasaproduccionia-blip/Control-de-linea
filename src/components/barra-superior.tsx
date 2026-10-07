@@ -42,7 +42,12 @@ export function BarraSuperior({ sesion }: { sesion: Sesion }) {
         </Link>
         <nav className="tabs" aria-label="Secciones">
           {tabs.map((t) => (
-            <Link key={t.href} href={t.href} className="tabbtn" aria-current={t.activo ? 'page' : undefined}>
+            <Link
+              key={t.href}
+              href={t.href}
+              className="tabbtn"
+              aria-current={t.activo ? 'page' : undefined}
+            >
               {t.label}
             </Link>
           ))}
@@ -51,7 +56,12 @@ export function BarraSuperior({ sesion }: { sesion: Sesion }) {
           <span>
             <b>{sesion.nombre}</b> · {sesion.codigo}
           </span>
-          <button type="button" className="btn btn-ghost" style={{ minHeight: 44, padding: '0 14px', fontSize: 15 }} onClick={salir}>
+          <button
+            type="button"
+            className="btn btn-ghost"
+            style={{ minHeight: 44, padding: '0 14px', fontSize: 15 }}
+            onClick={salir}
+          >
             Salir
           </button>
         </div>

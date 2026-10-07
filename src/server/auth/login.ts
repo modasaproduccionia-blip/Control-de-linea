@@ -14,7 +14,10 @@ export async function autenticar(codigo: string, pin: string, ahora = new Date()
   const u = await prisma.usuario.findUnique({ where: { codigo } });
   if (u?.bloqueadoHasta && u.bloqueadoHasta > ahora) {
     const min = Math.ceil((u.bloqueadoHasta.getTime() - ahora.getTime()) / 60_000);
-    throw new AppError('PROHIBIDO', `Usuario bloqueado por intentos fallidos. Intente en ${min} min.`);
+    throw new AppError(
+      'PROHIBIDO',
+      `Usuario bloqueado por intentos fallidos. Intente en ${min} min.`,
+    );
   }
   const ok = await bcrypt.compare(pin, u?.pinHash ?? HASH_FALSO());
   if (!u || !u.activo || !ok) {
@@ -24,14 +27,20 @@ export async function autenticar(codigo: string, pin: string, ahora = new Date()
         where: { id: u.id },
         data:
           intentos >= MAX_INTENTOS
-            ? { intentosFallidos: 0, bloqueadoHasta: new Date(ahora.getTime() + BLOQUEO_MIN * 60_000) }
+            ? {
+                intentosFallidos: 0,
+                bloqueadoHasta: new Date(ahora.getTime() + BLOQUEO_MIN * 60_000),
+              }
             : { intentosFallidos: intentos },
       });
     }
     throw new AppError('NO_AUTENTICADO', 'Código o PIN incorrecto.');
   }
   if (u.intentosFallidos || u.bloqueadoHasta) {
-    await prisma.usuario.update({ where: { id: u.id }, data: { intentosFallidos: 0, bloqueadoHasta: null } });
+    await prisma.usuario.update({
+      where: { id: u.id },
+      data: { intentosFallidos: 0, bloqueadoHasta: null },
+    });
   }
   return { id: u.id, codigo: u.codigo, nombre: u.nombre, rol: u.rol, lineaId: u.lineaId };
 }

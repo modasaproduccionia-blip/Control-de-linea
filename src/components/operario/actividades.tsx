@@ -84,7 +84,9 @@ export function Actividades({ p, recargar }: { p: ProduccionDTO; recargar: () =>
             <span>Duración laboral</span>
           </div>
           <div>
-            <b style={{ color: (p.sobretiempoMin ?? 0) > 0 ? 'var(--red)' : 'inherit' }}>{hm(p.sobretiempoMin)}</b>
+            <b style={{ color: (p.sobretiempoMin ?? 0) > 0 ? 'var(--red)' : 'inherit' }}>
+              {hm(p.sobretiempoMin)}
+            </b>
             <span>Sobretiempo</span>
           </div>
           <div>
@@ -93,7 +95,13 @@ export function Actividades({ p, recargar }: { p: ProduccionDTO; recargar: () =>
           </div>
         </div>
         <div
-          style={{ height: 10, borderRadius: 5, background: 'var(--surface-2)', marginTop: 12, overflow: 'hidden' }}
+          style={{
+            height: 10,
+            borderRadius: 5,
+            background: 'var(--surface-2)',
+            marginTop: 12,
+            overflow: 'hidden',
+          }}
           role="progressbar"
           aria-valuenow={pct}
           aria-valuemin={0}
@@ -120,7 +128,12 @@ export function Actividades({ p, recargar }: { p: ProduccionDTO; recargar: () =>
         </button>
       ))}
       <BarraAcciones>
-        <button type="button" className="btn btn-xl btn-blue" disabled={enviando} onClick={registrar}>
+        <button
+          type="button"
+          className="btn btn-xl btn-blue"
+          disabled={enviando}
+          onClick={registrar}
+        >
           Registrar actividades
         </button>
       </BarraAcciones>

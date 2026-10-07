@@ -17,7 +17,11 @@ export function validarIncidencias(filas: FilaIncidencia[]): string | null {
   if (filas.length === 0 || filas.some((f) => !f.motivoId || !(f.porcentaje > 0))) {
     return MSG_FILA_INCOMPLETA;
   }
-  if (filas.some((f) => !Number.isInteger(f.porcentaje) || f.porcentaje % 5 !== 0 || f.porcentaje > 100)) {
+  if (
+    filas.some(
+      (f) => !Number.isInteger(f.porcentaje) || f.porcentaje % 5 !== 0 || f.porcentaje > 100,
+    )
+  ) {
     return 'Los porcentajes deben ser múltiplos de 5 entre 5% y 100%';
   }
   if (new Set(filas.map((f) => f.motivoId)).size !== filas.length) return MSG_MOTIVOS_REPETIDOS;

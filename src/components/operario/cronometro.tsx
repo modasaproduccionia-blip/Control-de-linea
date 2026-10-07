@@ -101,7 +101,9 @@ export function Cronometro({ p, recargar }: Props) {
         {abierta && (
           <div className="stopband" role="status">
             <div>
-              <div style={{ fontWeight: 700 }}>Parada por {abierta.tipo === 'PIEZA' ? 'pieza' : 'material'}</div>
+              <div style={{ fontWeight: 700 }}>
+                Parada por {abierta.tipo === 'PIEZA' ? 'pieza' : 'material'}
+              </div>
               <div>{abierta.detalle}</div>
             </div>
             <div className="st" style={{ marginLeft: 'auto' }}>
@@ -139,7 +141,8 @@ export function Cronometro({ p, recargar }: Props) {
             {p.paradas.map((x) => (
               <li key={x.id}>
                 <span>
-                  <span className="tag">{x.tipo === 'PIEZA' ? 'Pieza' : 'Material'}</span> {x.detalle}
+                  <span className="tag">{x.tipo === 'PIEZA' ? 'Pieza' : 'Material'}</span>{' '}
+                  {x.detalle}
                   {x.comentario && <span className="muted"> · {x.comentario}</span>}
                 </span>
                 <span>
@@ -152,19 +155,36 @@ export function Cronometro({ p, recargar }: Props) {
         </div>
       )}
 
-      {modal && <ModalParada produccionId={p.id} cerrar={() => setModal(false)} recargar={recargar} />}
+      {modal && (
+        <ModalParada produccionId={p.id} cerrar={() => setModal(false)} recargar={recargar} />
+      )}
 
       <BarraAcciones>
         {abierta ? (
-          <button type="button" className="btn btn-xl btn-yellow" disabled={enviando} onClick={terminarParada}>
+          <button
+            type="button"
+            className="btn btn-xl btn-yellow"
+            disabled={enviando}
+            onClick={terminarParada}
+          >
             Terminar parada
           </button>
         ) : (
           <>
-            <button type="button" className="btn btn-xl btn-yellow" disabled={enviando} onClick={() => setModal(true)}>
+            <button
+              type="button"
+              className="btn btn-xl btn-yellow"
+              disabled={enviando}
+              onClick={() => setModal(true)}
+            >
               Registrar parada
             </button>
-            <button type="button" className="btn btn-xl btn-red" disabled={enviando} onClick={finalizar}>
+            <button
+              type="button"
+              className="btn btn-xl btn-red"
+              disabled={enviando}
+              onClick={finalizar}
+            >
               Finalizar
             </button>
           </>
@@ -182,7 +202,15 @@ interface Detalle {
 }
 
 /** Modal de parada: Pieza / Material → detalle → comentario → INICIAR PARADA (§4.4, §5.12). */
-function ModalParada({ produccionId, cerrar, recargar }: { produccionId: string; cerrar: () => void; recargar: () => void }) {
+function ModalParada({
+  produccionId,
+  cerrar,
+  recargar,
+}: {
+  produccionId: string;
+  cerrar: () => void;
+  recargar: () => void;
+}) {
   const toast = useToast();
   const dlg = useRef<HTMLDialogElement>(null);
   const clave = useRef(nuevaClave());
@@ -204,7 +232,8 @@ function ModalParada({ produccionId, cerrar, recargar }: { produccionId: string;
   const iniciar = async () => {
     if (!tipo) return setError('Elige si la parada es por pieza o por material');
     if (!detalle) return setError('Elige el detalle de la parada');
-    if (detalle.requiereComentario && !comentario.trim()) return setError('Escribe un comentario para explicar la parada');
+    if (detalle.requiereComentario && !comentario.trim())
+      return setError('Escribe un comentario para explicar la parada');
     setEnviando(true);
     try {
       await api(`/producciones/${produccionId}/paradas`, {

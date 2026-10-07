@@ -15,7 +15,9 @@ export function Inicio() {
   const q = useQuery({
     queryKey: ['en-curso'],
     queryFn: async () => {
-      const r = await api<{ producciones: ProduccionDTO[]; serverNow: string }>('/producciones/en-curso');
+      const r = await api<{ producciones: ProduccionDTO[]; serverNow: string }>(
+        '/producciones/en-curso',
+      );
       sincronizarReloj(r.serverNow);
       return r;
     },
@@ -37,7 +39,11 @@ export function Inicio() {
           {lista.map((j) => {
             const parada = j.paradas.find((p) => !p.horaFin);
             return (
-              <Link key={j.id} href={`/trabajo/${j.id}`} className={`job ${parada ? 'stopping' : ''}`}>
+              <Link
+                key={j.id}
+                href={`/trabajo/${j.id}`}
+                className={`job ${parada ? 'stopping' : ''}`}
+              >
                 <span>
                   {parada ? (
                     <Etiqueta clase="b-stop">En parada</Etiqueta>
@@ -52,7 +58,9 @@ export function Inicio() {
                   {j.modelo} · {j.linea} · {j.estacion}
                 </span>
                 {j.estado === 'EN_PROCESO' ? (
-                  <span className="t">{hms(msLaborales(new Date(j.horaInicio), ahora, j.jornada))}</span>
+                  <span className="t">
+                    {hms(msLaborales(new Date(j.horaInicio), ahora, j.jornada))}
+                  </span>
                 ) : (
                   <span className="muted" style={{ marginTop: 'auto' }}>
                     Pendiente: {ETIQUETA_ESTADO[j.estado].toLowerCase()}
@@ -64,7 +72,9 @@ export function Inicio() {
         </div>
       ) : (
         <div className="empty">
-          <p style={{ fontSize: 20, fontWeight: 700, margin: '0 0 6px', color: 'var(--ink)' }}>No hay trabajos en curso</p>
+          <p style={{ fontSize: 20, fontWeight: 700, margin: '0 0 6px', color: 'var(--ink)' }}>
+            No hay trabajos en curso
+          </p>
           Elige el bus y la estación para empezar a contar el tiempo.
         </div>
       )}
@@ -82,7 +92,8 @@ export function Inicio() {
           <dd>11:40 – 12:25, no se cuenta</dd>
         </dl>
         <p className="muted" style={{ margin: '10px 0 0', fontSize: 15 }}>
-          Si un trabajo sigue después de las 19:50, el contador se detiene y continúa al día siguiente a las 07:00.
+          Si un trabajo sigue después de las 19:50, el contador se detiene y continúa al día
+          siguiente a las 07:00.
         </p>
       </div>
       <BarraAcciones>

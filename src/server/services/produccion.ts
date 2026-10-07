@@ -18,7 +18,8 @@ type Tx = Prisma.TransactionClient;
 const MSG_CAMBIO_CONCURRENTE = 'Este trabajo cambió en otro dispositivo. Se recargó la pantalla.';
 const MSG_PARADA_ABIERTA = 'Termina la parada antes de finalizar el trabajo';
 
-const esUnico = (e: unknown) => e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002';
+const esUnico = (e: unknown) =>
+  e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002';
 
 /** Fecha de producción = fecha del INICIO en America/Lima (DECISIONES 2026-10-07). */
 function fechaLima(t: Date): Date {
@@ -32,26 +33,47 @@ async function validarInicioTx(db: Tx | typeof prisma, input: InicioInput) {
   const [cliente, combo, linea, actividades] = await Promise.all([
     db.cliente.findFirst({ where: { id: input.clienteId, activo: true } }),
     db.modeloLineaEstacion.findFirst({
-      where: { modeloId: input.modeloId, lineaId: input.lineaId, estacionId: input.estacionId, activo: true },
+      where: {
+        modeloId: input.modeloId,
+        lineaId: input.lineaId,
+        estacionId: input.estacionId,
+        activo: true,
+      },
       include: { estacion: true },
     }),
     db.linea.findUnique({ where: { id: input.lineaId } }),
     db.actividadEstandar.count({
-      where: { modeloId: input.modeloId, lineaId: input.lineaId, estacionId: input.estacionId, activo: true },
+      where: {
+        modeloId: input.modeloId,
+        lineaId: input.lineaId,
+        estacionId: input.estacionId,
+        activo: true,
+      },
     }),
   ]);
   // DIFERENCIA vs original: se valida que todos los campos existan y que la estación sea de esa línea.
   if (!cliente || !combo || !linea) throw new AppError('VALIDACION', 'Complete todos los campos');
   // DIFERENCIA vs original: el original no validaba la hora estándar.
   if (linea.horaEstandarMin == null || linea.horaEstandarMin <= 0) {
-    throw new AppError('VALIDACION', 'La línea no tiene hora estándar configurada. Avise a su supervisor.');
+    throw new AppError(
+      'VALIDACION',
+      'La línea no tiene hora estándar configurada. Avise a su supervisor.',
+    );
   }
   if (actividades === 0) {
-    throw new AppError('VALIDACION', 'Esta estación no tiene actividades configuradas. Avise a su supervisor.');
+    throw new AppError(
+      'VALIDACION',
+      'Esta estación no tiene actividades configuradas. Avise a su supervisor.',
+    );
   }
   const codigo = codigoBus(cliente.sigla, input.numeroBus);
   const dup = await db.produccion.findFirst({
-    where: { codigoBus: codigo, estacionCodigo: combo.estacion.codigo, estado: { not: 'ANULADO' } },
+    where: {
+      codigoBus: codigo,
+      estacionCodigo: combo.estacion.codigo,
+      estado: { not: 'ANULADO' },
+      esDemo: false,
+    },
     select: { id: true },
   });
   if (dup) throw new AppError('DUPLICADO', MSG_DUPLICADO);
@@ -65,7 +87,10 @@ export async function validarInicio(input: InicioInput) {
 
 export async function iniciar(input: InicioInput, sesion: Sesion, idemKey: string | null) {
   if (idemKey) {
-    const previa = await prisma.produccion.findUnique({ where: { idempotencyKey: idemKey }, select: { id: true } });
+    const previa = await prisma.produccion.findUnique({
+      where: { idempotencyKey: idemKey },
+      select: { id: true },
+    });
     if (previa) return previa;
   }
   const jornada = await cargarJornada();
@@ -100,7 +125,10 @@ export async function iniciar(input: InicioInput, sesion: Sesion, idemKey: strin
     if (esUnico(e)) {
       // Doble toque con la misma clave → mismo resultado; si no, es un duplicado bus + estación.
       if (idemKey) {
-        const previa = await prisma.produccion.findUnique({ where: { idempotencyKey: idemKey }, select: { id: true } });
+        const previa = await prisma.produccion.findUnique({
+          where: { idempotencyKey: idemKey },
+          select: { id: true },
+        });
         if (previa) return previa;
       }
       throw new AppError('DUPLICADO', MSG_DUPLICADO);
@@ -168,7 +196,11 @@ export async function obtener(id: string) {
 /** Trabajos no completados: operario ve los de su línea (tablets compartidas); supervisor/admin, todos. */
 export async function enCurso(sesion: Sesion) {
   const filtroLinea =
-    sesion.rol === 'OPERARIO' ? (sesion.lineaId ? { lineaId: sesion.lineaId } : { iniciadoPorId: sesion.id }) : {};
+    sesion.rol === 'OPERARIO'
+      ? sesion.lineaId
+        ? { lineaId: sesion.lineaId }
+        : { iniciadoPorId: sesion.id }
+      : {};
   const lista = await prisma.produccion.findMany({
     where: { estado: { notIn: ['COMPLETADO', 'ANULADO'] }, esDemo: false, ...filtroLinea },
     include: includeDetalle,
@@ -181,7 +213,13 @@ export async function enCurso(sesion: Sesion) {
 // ---------------------------------------------------------------- Transiciones
 
 /** Actualiza solo si el estado y la versión siguen siendo los esperados (concurrencia optimista). */
-async function transicion(tx: Tx, id: string, de: Estado, version: number, data: Prisma.ProduccionUpdateManyMutationInput) {
+async function transicion(
+  tx: Tx,
+  id: string,
+  de: Estado,
+  version: number,
+  data: Prisma.ProduccionUpdateManyMutationInput,
+) {
   const r = await tx.produccion.updateMany({
     where: { id, estado: de, version },
     data: { ...data, version: { increment: 1 } },
@@ -197,9 +235,13 @@ async function cargar(tx: Tx, id: string) {
 
 function exigirEstado(actual: string, esperado: Estado) {
   if (actual !== esperado) {
-    throw new AppError('ESTADO_INVALIDO', 'Este paso ya fue registrado o no corresponde. Se recargó la pantalla.', {
-      estado: actual,
-    });
+    throw new AppError(
+      'ESTADO_INVALIDO',
+      'Este paso ya fue registrado o no corresponde. Se recargó la pantalla.',
+      {
+        estado: actual,
+      },
+    );
   }
 }
 
@@ -215,8 +257,16 @@ export async function finalizar(id: string, sesion: Sesion) {
     if (abierta) throw new AppError('CONFLICTO', MSG_PARADA_ABIERTA);
     const jornada = p.jornadaSnapshot as unknown as Jornada;
     const fin = new Date();
-    const cierre = calcularCierre({ horaInicio: p.horaInicio, horaFin: fin, horaEstandarMin: p.horaEstandarMin, jornada });
-    const paradas = await tx.parada.aggregate({ where: { produccionId: id }, _sum: { duracionLaboralMin: true } });
+    const cierre = calcularCierre({
+      horaInicio: p.horaInicio,
+      horaFin: fin,
+      horaEstandarMin: p.horaEstandarMin,
+      jornada,
+    });
+    const paradas = await tx.parada.aggregate({
+      where: { produccionId: id },
+      _sum: { duracionLaboralMin: true },
+    });
     await transicion(tx, id, 'EN_PROCESO', p.version, {
       horaFin: fin,
       ...cierre,
@@ -235,14 +285,19 @@ export async function iniciarParada(
   idemKey: string | null,
 ) {
   if (idemKey) {
-    const previa = await prisma.parada.findUnique({ where: { idempotencyKey: idemKey }, select: { id: true } });
+    const previa = await prisma.parada.findUnique({
+      where: { idempotencyKey: idemKey },
+      select: { id: true },
+    });
     if (previa) return previa;
   }
   try {
     return await prisma.$transaction(async (tx) => {
       const p = await cargar(tx, id);
       exigirEstado(p.estado, 'EN_PROCESO');
-      const detalle = await tx.detalleParada.findFirst({ where: { id: input.detalleParadaId, activo: true } });
+      const detalle = await tx.detalleParada.findFirst({
+        where: { id: input.detalleParadaId, activo: true },
+      });
       if (!detalle || detalle.tipo !== input.tipo) {
         throw new AppError('VALIDACION', 'Elige si la parada es por pieza o por material');
       }
@@ -265,7 +320,8 @@ export async function iniciarParada(
       });
     });
   } catch (e) {
-    if (esUnico(e)) throw new AppError('CONFLICTO', 'Ya hay una parada en curso para este trabajo.');
+    if (esUnico(e))
+      throw new AppError('CONFLICTO', 'Ya hay una parada en curso para este trabajo.');
     throw e;
   }
 }
@@ -279,7 +335,10 @@ export async function terminarParada(id: string, paradaId: string) {
     const fin = new Date();
     await tx.parada.update({
       where: { id: paradaId },
-      data: { horaFin: fin, ...minutosParada(parada.horaInicio, fin, p.jornadaSnapshot as unknown as Jornada) },
+      data: {
+        horaFin: fin,
+        ...minutosParada(parada.horaInicio, fin, p.jornadaSnapshot as unknown as Jornada),
+      },
     });
     return { ok: true };
   });
@@ -293,7 +352,9 @@ export async function listaActividades(id: string) {
     orderBy: { orden: 'asc' },
     select: { id: true, nombre: true, minutos: true, esProvisional: true },
   });
-  const registradas = await prisma.controlActividad.findMany({ where: { produccionId: id, realizada: true } });
+  const registradas = await prisma.controlActividad.findMany({
+    where: { produccionId: id, realizada: true },
+  });
   return {
     actividades: acts.map((a) => ({ ...a, minutos: Number(a.minutos) })),
     realizadas: registradas.map((r) => r.actividadEstandarId),
@@ -323,7 +384,8 @@ async function registrarActividadesTx(id: string, realizadas: string[]) {
     });
     const marcadas = new Set(realizadas);
     const desconocidas = realizadas.filter((r) => !acts.some((a) => a.id === r));
-    if (desconocidas.length) throw new AppError('VALIDACION', 'Hay actividades que no pertenecen a esta estación.');
+    if (desconocidas.length)
+      throw new AppError('VALIDACION', 'Hay actividades que no pertenecen a esta estación.');
     const { avancePct, minutosNoCumplidos } = calcularAvance({
       minutosActividades: acts.map((a) => Number(a.minutos)),
       minutosMarcados: acts.filter((a) => marcadas.has(a.id)).map((a) => Number(a.minutos)),
@@ -339,24 +401,38 @@ async function registrarActividadesTx(id: string, realizadas: string[]) {
       })),
     });
     const estado = estadoTrasActividades(p.sobretiempoMin ?? 0, minutosNoCumplidos);
-    await transicion(tx, id, 'PENDIENTE_ACTIVIDADES', p.version, { avancePct, minutosNoCumplidos, estado });
+    await transicion(tx, id, 'PENDIENTE_ACTIVIDADES', p.version, {
+      avancePct,
+      minutosNoCumplidos,
+      estado,
+    });
     return { estado, avancePct, minutosNoCumplidos };
   });
 }
 
 async function motivosValidos(tx: Tx, ids: string[], tipo: 'TIEMPO' | 'PRODUCCION') {
-  const ms = await tx.motivo.findMany({ where: { id: { in: ids }, activo: true, tipo: { in: [tipo, 'AMBOS'] } } });
-  if (ms.length !== new Set(ids).size) throw new AppError('VALIDACION', 'Hay motivos que no existen.');
+  const ms = await tx.motivo.findMany({
+    where: { id: { in: ids }, activo: true, tipo: { in: [tipo, 'AMBOS'] } },
+  });
+  if (ms.length !== new Set(ids).size)
+    throw new AppError('VALIDACION', 'Hay motivos que no existen.');
   return new Map(ms.map((m) => [m.id, m.nombre]));
 }
 
-export async function registrarIncidencias(id: string, items: { motivoId: string; porcentaje: number }[]) {
+export async function registrarIncidencias(
+  id: string,
+  items: { motivoId: string; porcentaje: number }[],
+) {
   const error = validarIncidencias(items);
   if (error) throw new AppError('VALIDACION', error);
   return prisma.$transaction(async (tx) => {
     const p = await cargar(tx, id);
     exigirEstado(p.estado, 'PENDIENTE_INCIDENCIAS_TIEMPO');
-    const nombres = await motivosValidos(tx, items.map((i) => i.motivoId), 'TIEMPO');
+    const nombres = await motivosValidos(
+      tx,
+      items.map((i) => i.motivoId),
+      'TIEMPO',
+    );
     await tx.incidenciaTiempo.createMany({
       data: items.map((i) => ({
         produccionId: id,
@@ -399,8 +475,14 @@ export async function anular(id: string, motivo: string, sesion: Sesion) {
   return prisma.$transaction(async (tx) => {
     const p = await cargar(tx, id);
     if (p.estado === 'ANULADO') return { estado: 'ANULADO' as Estado };
-    await tx.parada.updateMany({ where: { produccionId: id, horaFin: null }, data: { horaFin: new Date() } });
-    await transicion(tx, id, p.estado as Estado, p.version, { estado: 'ANULADO', motivoAnulacion: motivo });
+    await tx.parada.updateMany({
+      where: { produccionId: id, horaFin: null },
+      data: { horaFin: new Date() },
+    });
+    await transicion(tx, id, p.estado as Estado, p.version, {
+      estado: 'ANULADO',
+      motivoAnulacion: motivo,
+    });
     await tx.auditoria.create({
       data: {
         entidad: 'produccion',

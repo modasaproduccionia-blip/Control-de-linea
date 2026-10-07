@@ -91,23 +91,79 @@ export async function exportarXlsx(f: FiltroListado): Promise<Buffer> {
     return ws;
   };
   const tp = hoja('TB_PRODUCCION', [
-    'IDProduccion', 'FechaProduccion', 'Responsable', 'Estacion', 'Linea', 'CodigoBus', 'Cliente', 'HoraInicio',
-    'HoraFin', 'DuracionReal', 'HoraEstandar', 'Sobretiempo', 'CumpleTiempo', 'Modelo', 'AvanceFinalNuevo2',
-    'DuracionLaboralReal', 'MinutosNoCumplidos', 'MinutosLaborales', 'MinutosParada', 'Estado',
+    'IDProduccion',
+    'FechaProduccion',
+    'Responsable',
+    'Estacion',
+    'Linea',
+    'CodigoBus',
+    'Cliente',
+    'HoraInicio',
+    'HoraFin',
+    'DuracionReal',
+    'HoraEstandar',
+    'Sobretiempo',
+    'CumpleTiempo',
+    'Modelo',
+    'AvanceFinalNuevo2',
+    'DuracionLaboralReal',
+    'MinutosNoCumplidos',
+    'MinutosLaborales',
+    'MinutosParada',
+    'Estado',
   ]);
-  const ta = hoja('TB_CONTROL_ACTIVIDADES', ['IDRegistro', 'IDProduccion', 'Estacion', 'CodigoBus', 'Actividad', 'Realizada', 'FechaProduccion']);
-  const ti = hoja('TB_INCIDENCIAS', ['IDMotivo', 'IDProduccion', 'Estacion', 'CodigoBus', 'Motivo', 'Porcentaje', 'TiempoImpacto', 'FechaProduccion']);
+  const ta = hoja('TB_CONTROL_ACTIVIDADES', [
+    'IDRegistro',
+    'IDProduccion',
+    'Estacion',
+    'CodigoBus',
+    'Actividad',
+    'Realizada',
+    'FechaProduccion',
+  ]);
+  const ti = hoja('TB_INCIDENCIAS', [
+    'IDMotivo',
+    'IDProduccion',
+    'Estacion',
+    'CodigoBus',
+    'Motivo',
+    'Porcentaje',
+    'TiempoImpacto',
+    'FechaProduccion',
+  ]);
   const tc = hoja('TB_CAUSAS_INCUMPLIMIENTO', [
-    'IDCausa', 'IDProduccion', 'CodigoBus', 'Estacion', 'Motivoproduccion', 'OrdenImportancia', 'PesoAsignado',
-    'MinutosImpacto', 'FechaProduccion',
+    'IDCausa',
+    'IDProduccion',
+    'CodigoBus',
+    'Estacion',
+    'Motivoproduccion',
+    'OrdenImportancia',
+    'PesoAsignado',
+    'MinutosImpacto',
+    'FechaProduccion',
   ]);
   const tpa = hoja('PARADAS', [
-    'IDParada', 'IDProduccion', 'CodigoBus', 'Estacion', 'Tipo', 'Detalle', 'Comentario', 'HoraInicio', 'HoraFin',
-    'DuracionReal', 'DuracionLaboral', 'FechaProduccion',
+    'IDParada',
+    'IDProduccion',
+    'CodigoBus',
+    'Estacion',
+    'Tipo',
+    'Detalle',
+    'Comentario',
+    'HoraInicio',
+    'HoraFin',
+    'DuracionReal',
+    'DuracionLaboral',
+    'FechaProduccion',
   ]);
   for (const p of prods) {
     const fecha = p.fechaProduccion.toISOString().slice(0, 10);
-    const base = { IDProduccion: p.id, Estacion: p.estacion.codigo, CodigoBus: p.codigoBus, FechaProduccion: fecha };
+    const base = {
+      IDProduccion: p.id,
+      Estacion: p.estacion.codigo,
+      CodigoBus: p.codigoBus,
+      FechaProduccion: fecha,
+    };
     tp.addRow({
       ...base,
       Responsable: p.responsableNombre ?? '',
@@ -128,10 +184,21 @@ export async function exportarXlsx(f: FiltroListado): Promise<Buffer> {
       Estado: p.estado,
     });
     for (const a of p.actividades) {
-      ta.addRow({ ...base, IDRegistro: a.id, Actividad: a.actividadNombre, Realizada: siNo(a.realizada) });
+      ta.addRow({
+        ...base,
+        IDRegistro: a.id,
+        Actividad: a.actividadNombre,
+        Realizada: siNo(a.realizada),
+      });
     }
     for (const i of p.incidencias) {
-      ti.addRow({ ...base, IDMotivo: i.id, Motivo: i.motivoNombre, Porcentaje: i.porcentaje, TiempoImpacto: Number(i.tiempoImpactoMin) });
+      ti.addRow({
+        ...base,
+        IDMotivo: i.id,
+        Motivo: i.motivoNombre,
+        Porcentaje: i.porcentaje,
+        TiempoImpacto: Number(i.tiempoImpactoMin),
+      });
     }
     for (const c of p.causas) {
       tc.addRow({

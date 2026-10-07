@@ -1,12 +1,12 @@
-# Desarrollo: `docker compose up -d db` levanta solo PostgreSQL y la app se corre con `npm run dev`.
-# Todo en contenedores: `docker compose up --build`.
+# Todo en contenedores:  AUTH_SECRET=$(openssl rand -base64 32) docker compose up --build
+# Solo la BD para desarrollo:  docker compose up -d db
 services:
   db:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
       POSTGRES_USER: control
-      POSTGRES_PASSWORD: control
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-control}
       POSTGRES_DB: control_linea
       TZ: UTC
     ports:
@@ -19,15 +19,32 @@ services:
       timeout: 3s
       retries: 10
 
-  app:
-    build: .
-    restart: unless-stopped
+  # Aplica migraciones, la semilla (jornada, detalles de parada, usuarios iniciales) y los
+  # catálogos del Excel. Es idempotente: se ejecuta en cada despliegue y termina.
+  migrar:
+    build:
+      context: .
+      target: build
     depends_on:
       db:
         condition: service_healthy
     environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://control:${POSTGRES_PASSWORD:-control}@db:5432/control_linea
+      SEED_PIN: ${SEED_PIN:-}
+    volumes:
+      - ./referencia:/app/referencia:ro
+    command: sh -c "npx prisma migrate deploy && npx prisma db seed && npm run db:import"
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      migrar:
+        condition: service_completed_successfully
+    environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://control:control@db:5432/control_linea
+      DATABASE_URL: postgresql://control:${POSTGRES_PASSWORD:-control}@db:5432/control_linea
       AUTH_SECRET: ${AUTH_SECRET:?Defina AUTH_SECRET en .env}
       AUTH_URL: ${AUTH_URL:-http://localhost:3000}
       APP_TIMEZONE: America/Lima

@@ -19,22 +19,25 @@ Reconstrucción como app web de una app Power Apps que registra el tiempo de tra
 - Textos de la interfaz en español, simples, pensados para operarios en tablet.
 
 ## Comandos del proyecto
-Requisitos: Node 22 (`.nvmrc`), npm, Docker (para PostgreSQL).
+Requisitos: Node 22 (`.nvmrc`), npm, PostgreSQL 16 (o Docker).
 
 | Acción | Comando |
 |---|---|
-| Instalar dependencias | `npm install` |
+| Instalar dependencias (genera el cliente Prisma) | `npm install` |
 | Variables de entorno | `cp .env.example .env` y completar `AUTH_SECRET` |
 | Levantar BD (solo PostgreSQL) | `docker compose up -d db` |
-| Migrar | _(Fase 3)_ |
-| Sembrar / importar Excel | _(Fase 3)_ |
+| Migrar | `npm run db:migrate` (desarrollo: `npm run db:migrate:dev`) |
+| Importar catálogos del Excel | `npm run db:import` (solo reporte: `npm run db:import:dry`) |
+| Semilla (jornada, detalles de parada, usuarios 1000/2000/3000) | `npm run db:seed` |
+| Datos de demostración para indicadores (`es_demo`) | `npm run db:demo` (borrar: `npm run db:demo -- --borrar`) |
+| Crear usuario | `npm run usuario:crear -- <codigo> "<nombre>" <ROL> <pin> [linea]` |
 | Desarrollo | `npm run dev` → http://localhost:3000 |
-| Pruebas unitarias | `npm test` (`npm run test:watch` en modo observación) |
-| E2E | _(Fase 7, Playwright)_ |
+| Pruebas unitarias | `npm test` |
+| E2E (Playwright, tablet y celular) | `npm run e2e` (Chromium preinstalado: `PW_CHROMIUM=/ruta/chrome`) |
 | Lint / formato / tipos | `npm run lint` · `npm run format:check` · `npm run typecheck` |
 | Todo lo anterior junto | `npm run check` |
 | Build de producción | `npm run build` |
-| App + BD en contenedores | `docker compose up --build` |
+| App + BD + migraciones en contenedores | `AUTH_SECRET=... docker compose up --build` |
 | Salud del servicio | `GET /api/v1/health` → `{ status, serverNow }` |
 
 ## Diseño (resumen)

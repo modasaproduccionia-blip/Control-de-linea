@@ -39,44 +39,78 @@ describe('calcularCierre (§5.2–5.4)', () => {
 
 describe('calcularAvance (§5.5–5.6)', () => {
   it('pondera por minutos y calcula no cumplidos sobre la duración laboral', () => {
-    const r = calcularAvance({ minutosActividades: [198, 252, 366], minutosMarcados: [198], duracionLaboralMin: 270 });
+    const r = calcularAvance({
+      minutosActividades: [198, 252, 366],
+      minutosMarcados: [198],
+      duracionLaboralMin: 270,
+    });
     expect(r.avancePct).toBe(24.3);
     expect(r.minutosNoCumplidos).toBe(204); // 270 × 75.7 / 100 = 204.39
   });
   it('100% → 0 no cumplidos', () => {
-    expect(calcularAvance({ minutosActividades: [10, 20], minutosMarcados: [10, 20], duracionLaboralMin: 300 })).toEqual({
+    expect(
+      calcularAvance({
+        minutosActividades: [10, 20],
+        minutosMarcados: [10, 20],
+        duracionLaboralMin: 300,
+      }),
+    ).toEqual({
       avancePct: 100,
       minutosNoCumplidos: 0,
     });
   });
   it('0 marcadas → toda la duración no cumplida', () => {
-    expect(calcularAvance({ minutosActividades: [10], minutosMarcados: [], duracionLaboralMin: 270 }).minutosNoCumplidos).toBe(270);
+    expect(
+      calcularAvance({ minutosActividades: [10], minutosMarcados: [], duracionLaboralMin: 270 })
+        .minutosNoCumplidos,
+    ).toBe(270);
   });
   it('sin actividades: avance null, no cumplidos = duración (como el original)', () => {
-    expect(calcularAvance({ minutosActividades: [], minutosMarcados: [], duracionLaboralMin: 270 })).toEqual({
+    expect(
+      calcularAvance({ minutosActividades: [], minutosMarcados: [], duracionLaboralMin: 270 }),
+    ).toEqual({
       avancePct: null,
       minutosNoCumplidos: 270,
     });
   });
   it('suma minutos decimales sin error de coma flotante', () => {
-    const r = calcularAvance({ minutosActividades: [14.4, 28.2, 57.4], minutosMarcados: [14.4, 28.2], duracionLaboralMin: 100 });
+    const r = calcularAvance({
+      minutosActividades: [14.4, 28.2, 57.4],
+      minutosMarcados: [14.4, 28.2],
+      duracionLaboralMin: 100,
+    });
     expect(r.avancePct).toBe(42.6);
   });
 });
 
 describe('incidencias (§5.8)', () => {
   it('acepta filas válidas que suman 100', () => {
-    expect(validarIncidencias([{ motivoId: 'a', porcentaje: 60 }, { motivoId: 'b', porcentaje: 40 }])).toBeNull();
+    expect(
+      validarIncidencias([
+        { motivoId: 'a', porcentaje: 60 },
+        { motivoId: 'b', porcentaje: 40 },
+      ]),
+    ).toBeNull();
   });
   it('mensajes originales', () => {
-    expect(validarIncidencias([{ motivoId: 'a', porcentaje: 50 }, { motivoId: 'a', porcentaje: 50 }])).toBe(
-      'No se pueden registrar motivos repetidos',
+    expect(
+      validarIncidencias([
+        { motivoId: 'a', porcentaje: 50 },
+        { motivoId: 'a', porcentaje: 50 },
+      ]),
+    ).toBe('No se pueden registrar motivos repetidos');
+    expect(validarIncidencias([{ motivoId: 'a', porcentaje: 50 }])).toBe(
+      'Los porcentajes deben sumar 100%',
     );
-    expect(validarIncidencias([{ motivoId: 'a', porcentaje: 50 }])).toBe('Los porcentajes deben sumar 100%');
   });
   it('rechaza fila sin motivo o con 0% (corrección aprobada)', () => {
     expect(validarIncidencias([{ motivoId: '', porcentaje: 100 }])).toMatch(/motivo/);
-    expect(validarIncidencias([{ motivoId: 'a', porcentaje: 100 }, { motivoId: 'b', porcentaje: 0 }])).toMatch(/porcentaje/);
+    expect(
+      validarIncidencias([
+        { motivoId: 'a', porcentaje: 100 },
+        { motivoId: 'b', porcentaje: 0 },
+      ]),
+    ).toMatch(/porcentaje/);
   });
   it('tiempo de impacto y formato', () => {
     expect(tiempoImpactoMin(35, 455)).toBe(159.25);

@@ -27,7 +27,9 @@ export function Completado({ p }: { p: ProduccionDTO }) {
               <span>Duración laboral</span>
             </div>
             <div>
-              <b style={{ color: p.cumpleTiempo ? 'var(--blue)' : 'var(--red)' }}>{p.cumpleTiempo ? 'Sí' : 'No'}</b>
+              <b style={{ color: p.cumpleTiempo ? 'var(--blue)' : 'var(--red)' }}>
+                {p.cumpleTiempo ? 'Sí' : 'No'}
+              </b>
               <span>Cumple tiempo</span>
             </div>
             <div>

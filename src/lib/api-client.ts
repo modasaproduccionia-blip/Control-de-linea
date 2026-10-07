@@ -32,9 +32,15 @@ export async function api<T>(
     // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     window.location.href = '/login';
   }
-  const data = (await res.json().catch(() => ({}))) as { error?: { code: string; message: string } };
+  const data = (await res.json().catch(() => ({}))) as {
+    error?: { code: string; message: string };
+  };
   if (!res.ok) {
-    throw new ApiError(data.error?.message ?? 'Ocurrió un error. Intente de nuevo.', data.error?.code ?? 'ERROR', res.status);
+    throw new ApiError(
+      data.error?.message ?? 'Ocurrió un error. Intente de nuevo.',
+      data.error?.code ?? 'ERROR',
+      res.status,
+    );
   }
   return data as T;
 }
