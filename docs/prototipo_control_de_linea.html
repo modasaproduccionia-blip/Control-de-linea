@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Control de Línea – Prototipo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E4E7EB; --surface:#FFFFFF; --surface-2:#F2F4F6; --line:#D0D6DD; --line-2:#B9C1CA;
+  --ink:#1D232B; --ink-2:#56616D; --ink-3:#8A949F;
+  --blue:#1E388F; --blue-2:#2C4FBF; --blue-soft:#E3E8F6;
+  --yellow:#FFD200; --yellow-soft:#FFF6CC; --yellow-ink:#5A4A00;
+  --red:#D3141B; --red-soft:#FBE3E4;
+  --on-blue:#FFFFFF; --on-red:#FFFFFF; --on-yellow:#1D232B;
+  --shadow:0 1px 0 rgba(29,35,43,.06),0 6px 18px -10px rgba(29,35,43,.25);
+  --r:14px; --r-sm:10px;
+  --f:'Barlow',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --fc:'Barlow Condensed','Arial Narrow',system-ui,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#15191E; --surface:#1F252C; --surface-2:#262D35; --line:#333C46; --line-2:#46515C;
+  --ink:#EEF1F4; --ink-2:#A9B3BD; --ink-3:#7C8792;
+  --blue:#5B7BE6; --blue-2:#7A95F0; --blue-soft:#232E4D;
+  --yellow:#FFD200; --yellow-soft:#3A3315; --yellow-ink:#FFE680;
+  --red:#F0444A; --red-soft:#43211F; --on-blue:#0E1530;
+  --shadow:0 1px 0 rgba(0,0,0,.3),0 8px 22px -12px rgba(0,0,0,.6); color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#15191E; --surface:#1F252C; --surface-2:#262D35; --line:#333C46; --line-2:#46515C;
+  --ink:#EEF1F4; --ink-2:#A9B3BD; --ink-3:#7C8792;
+  --blue:#5B7BE6; --blue-2:#7A95F0; --blue-soft:#232E4D;
+  --yellow:#FFD200; --yellow-soft:#3A3315; --yellow-ink:#FFE680;
+  --red:#F0444A; --red-soft:#43211F; --on-blue:#0E1530;
+  --shadow:0 1px 0 rgba(0,0,0,.3),0 8px 22px -12px rgba(0,0,0,.6); color-scheme:dark;}
+*{box-sizing:border-box}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f);font-size:17px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue-2);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.top-in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:14px;padding:10px 18px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;margin-right:auto}
+.brand b{font-family:var(--fc);font-size:23px;font-weight:700;letter-spacing:.01em;line-height:1}
+.brand small{display:block;color:var(--ink-2);font-size:13px;line-height:1.1}
+.tabs{display:flex;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:3px}
+.tabs button{border:0;background:none;padding:9px 16px;border-radius:9px;font-weight:600;color:var(--ink-2);min-height:44px}
+.tabs button[aria-pressed="true"]{background:var(--surface);color:var(--blue);box-shadow:var(--shadow)}
+.sim{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-2)}
+.sim .clock{font-family:var(--fc);font-size:22px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.sim select{border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:6px 8px;min-height:40px}
+
+main{max-width:1180px;margin:0 auto;padding:22px 18px 140px}
+.narrow{max-width:860px;margin:0 auto}
+h1{font-family:var(--fc);font-weight:700;font-size:34px;line-height:1.05;margin:0 0 4px}
+h2{font-family:var(--fc);font-weight:600;font-size:24px;margin:0 0 10px}
+.lead{color:var(--ink-2);margin:0 0 20px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:20px}
+.muted{color:var(--ink-2)}
+
+/* skewed signature */
+.skew{display:inline-flex;transform:skewX(-16deg);border-radius:5px}
+.skew>span{transform:skewX(16deg);display:inline-block}
+.steps{display:flex;gap:6px;margin:0 0 22px;flex-wrap:wrap}
+.steps .skew{padding:7px 16px;background:var(--surface);border:1px solid var(--line);font-weight:600;font-size:14px;color:var(--ink-3)}
+.steps .skew.done{color:var(--ink-2);background:var(--surface-2)}
+.steps .skew.on{background:var(--blue);border-color:var(--blue);color:var(--on-blue)}
+.badge{padding:3px 12px;font-size:13px;font-weight:700}
+.b-run{background:var(--blue);color:var(--on-blue)}
+.b-stop{background:var(--yellow);color:var(--on-yellow)}
+.b-pend{background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)}
+.b-ok{background:var(--blue-soft);color:var(--blue)}
+.b-no{background:var(--red-soft);color:var(--red)}
+
+/* buttons */
+.btn{border:0;border-radius:var(--r-sm);min-height:56px;padding:0 22px;font-weight:700;font-size:18px;display:inline-flex;align-items:center;justify-content:center;gap:10px}
+.btn-xl{min-height:84px;font-size:24px;font-family:var(--fc);letter-spacing:.02em;width:100%;border-radius:var(--r)}
+.btn-blue{background:var(--blue);color:var(--on-blue)}
+.btn-red{background:var(--red);color:var(--on-red)}
+.btn-yellow{background:var(--yellow);color:var(--on-yellow)}
+.btn-ghost{background:var(--surface);color:var(--ink);border:1px solid var(--line-2)}
+.btn:disabled{opacity:.38;cursor:not-allowed}
+.btn:not(:disabled):active{transform:translateY(1px)}
+.bar-actions{position:fixed;left:0;right:0;bottom:0;z-index:15;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:12px 18px calc(12px + env(safe-area-inset-bottom,0px))}
+.bar-actions .in{max-width:860px;margin:0 auto;display:flex;gap:12px}
+.bar-actions .in>*{flex:1}
+
+/* selection */
+.field{margin:0 0 24px}
+.field>label,.field>.lab{display:flex;justify-content:space-between;align-items:baseline;font-weight:700;margin:0 0 10px;font-size:18px}
+.field>.lab em{font-style:normal;font-weight:500;color:var(--ink-2);font-size:15px}
+.chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.chip{min-height:60px;border:1.5px solid var(--line-2);background:var(--surface);border-radius:var(--r-sm);font-weight:600;font-size:18px;padding:6px 10px;text-align:center}
+.chip[aria-pressed="true"]{border-color:var(--blue);background:var(--blue);color:var(--on-blue)}
+.chips.small .chip{min-height:52px;font-size:16px}
+.search{width:100%;min-height:52px;border:1.5px solid var(--line-2);border-radius:var(--r-sm);padding:0 14px;background:var(--surface);margin:0 0 10px}
+.picked{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1.5px solid var(--blue);background:var(--blue-soft);border-radius:var(--r-sm);padding:10px 14px;font-weight:700}
+.picked button{border:0;background:none;color:var(--blue);font-weight:700;min-height:44px}
+.busrow{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.keypad button{min-height:62px;border:1px solid var(--line-2);background:var(--surface);border-radius:var(--r-sm);font-family:var(--fc);font-size:28px;font-weight:600}
+.code{border:1px dashed var(--line-2);border-radius:var(--r);padding:16px;text-align:center;background:var(--surface-2)}
+.code .big{font-family:var(--fc);font-size:64px;font-weight:700;line-height:1;letter-spacing:.04em;font-variant-numeric:tabular-nums}
+.code .big i{font-style:normal;color:var(--ink-3)}
+.err{color:var(--red);font-weight:600;margin-top:8px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:16px}
+.kv dt{color:var(--ink-2)} .kv dd{margin:0;font-weight:600}
+
+/* jobs */
+.jobs{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.job{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:6px;min-height:150px}
+.job .bus{font-family:var(--fc);font-size:34px;font-weight:700;line-height:1}
+.job .t{font-family:var(--fc);font-size:28px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:auto}
+.job.stopping{border-color:var(--yellow);box-shadow:inset 6px 0 0 var(--yellow),var(--shadow)}
+.empty{border:2px dashed var(--line-2);border-radius:var(--r);padding:30px;text-align:center;color:var(--ink-2)}
+
+/* timer */
+.stage{border-radius:var(--r);overflow:hidden;border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow)}
+.stage-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 20px;flex-wrap:wrap}
+.stage-head .bus{font-family:var(--fc);font-size:40px;font-weight:700;line-height:1}
+.band{position:relative;background:var(--blue);color:var(--on-blue);padding:26px 20px 22px;text-align:center;overflow:hidden}
+.band::before,.band::after{content:"";position:absolute;top:-20%;height:140%;width:90px;transform:skewX(-16deg);opacity:.12;background:#fff}
+.band::before{left:6%}.band::after{right:8%;width:46px}
+.band.paused{background:var(--surface-2);color:var(--ink)}
+.band.paused::before,.band.paused::after{background:var(--ink);opacity:.05}
+.timer{font-family:var(--fc);font-weight:700;font-size:clamp(72px,16vw,148px);line-height:.95;font-variant-numeric:tabular-nums;letter-spacing:.01em;position:relative}
+.timer-lab{font-weight:600;opacity:.85;position:relative}
+.state{display:inline-block;margin-top:10px;position:relative}
+.meter{padding:16px 20px;border-top:1px solid var(--line)}
+.meter .track{height:14px;border-radius:7px;background:var(--surface-2);overflow:hidden;position:relative}
+.meter .fill{height:100%;background:var(--blue);border-radius:7px}
+.meter .fill.over{background:var(--red)}
+.meter .row{display:flex;justify-content:space-between;gap:10px;font-size:15px;color:var(--ink-2);margin-top:8px;flex-wrap:wrap}
+.stopband{background:var(--yellow);color:var(--on-yellow);padding:16px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.stopband .st{font-family:var(--fc);font-size:46px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+.stoplist{list-style:none;margin:0;padding:0}
+.stoplist li{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line);font-size:16px}
+.stoplist li:first-child{border-top:0}
+.tag{font-size:13px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--yellow-soft);color:var(--yellow-ink)}
+
+/* checklist */
+.check{display:flex;align-items:center;gap:16px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:14px 16px;margin:0 0 8px;min-height:68px}
+.check .box{flex:none;width:34px;height:34px;border-radius:8px;border:2px solid var(--line-2);display:grid;place-items:center;color:transparent;font-weight:900}
+.check[aria-checked="true"]{border-color:var(--blue);background:var(--blue-soft)}
+.check[aria-checked="true"] .box{background:var(--blue);border-color:var(--blue);color:var(--on-blue)}
+.check .name{flex:1;font-weight:600}
+.check .min{font-family:var(--fc);font-size:22px;font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.sticky-sum{position:sticky;top:76px;z-index:5;margin:0 0 14px}
+.sum{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.sum div{background:var(--surface-2);border-radius:var(--r-sm);padding:10px 12px}
+.sum b{display:block;font-family:var(--fc);font-size:28px;line-height:1.05;font-variant-numeric:tabular-nums}
+.sum span{font-size:14px;color:var(--ink-2)}
+
+/* editable rows */
+.erow{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px;margin:0 0 10px}
+.erow .n{font-family:var(--fc);font-size:28px;font-weight:700;color:var(--blue);text-align:center}
+.erow select{width:100%;min-height:52px;border:1.5px solid var(--line-2);border-radius:var(--r-sm);background:var(--surface);padding:0 10px}
+.erow .sub{font-size:14px;color:var(--ink-2);margin-top:6px}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button,.icon-btn{min-width:48px;min-height:48px;border:1px solid var(--line-2);background:var(--surface);border-radius:10px;font-size:22px;font-weight:700}
+.stepper output{min-width:64px;text-align:center;font-family:var(--fc);font-size:28px;font-weight:700}
+.icon-btn.del{color:var(--red)}
+.total{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-radius:var(--r-sm);font-weight:700;margin:6px 0 0}
+.total.okk{background:var(--blue-soft);color:var(--blue)} .total.bad{background:var(--red-soft);color:var(--red)}
+
+/* modal */
+dialog{border:0;border-radius:18px;padding:0;max-width:min(560px,94vw);width:100%;background:var(--surface);color:var(--ink);box-shadow:0 30px 80px -20px rgba(0,0,0,.5)}
+dialog::backdrop{background:rgba(20,24,30,.55)}
+.dlg{padding:22px}
+.dlg h2{margin-bottom:6px}
+.dlg .acts{display:flex;gap:10px;margin-top:20px}.dlg .acts>*{flex:1}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0 16px}
+.seg button{min-height:76px;border:2px solid var(--line-2);border-radius:var(--r-sm);background:var(--surface);font-family:var(--fc);font-size:26px;font-weight:700}
+.seg button[aria-pressed="true"]{border-color:var(--yellow);background:var(--yellow);color:var(--on-yellow)}
+textarea{width:100%;min-height:70px;border:1.5px solid var(--line-2);border-radius:var(--r-sm);padding:10px;background:var(--surface)}
+
+.toast{position:fixed;left:50%;top:calc(96px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:50;padding:12px 18px;border-radius:12px;font-weight:700;box-shadow:var(--shadow);max-width:92vw}
+.toast.ok{background:var(--blue);color:var(--on-blue)}.toast.er{background:var(--red);color:var(--on-red)}.toast.in{background:var(--ink);color:var(--surface)}
+
+/* dashboard */
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 18px}
+.filters select{min-height:46px;border:1px solid var(--line-2);border-radius:10px;background:var(--surface);padding:0 10px;font-weight:600}
+.filters .clear{border:0;background:var(--yellow);color:var(--on-yellow);border-radius:10px;min-height:46px;padding:0 14px;font-weight:700}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:0 0 16px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.kpi b{display:block;font-family:var(--fc);font-size:40px;line-height:1;font-variant-numeric:tabular-nums}
+.kpi span{color:var(--ink-2);font-size:15px}
+.kpi.red b{color:var(--red)} .kpi.blue b{color:var(--blue)} .kpi.yel{box-shadow:inset 0 -5px 0 var(--yellow)}
+.grid2{display:grid;grid-template-columns:1.3fr 1fr;gap:14px;margin:0 0 14px}
+.hbars{display:flex;flex-direction:column;gap:6px}
+.hbar{display:grid;grid-template-columns:130px 1fr 60px;gap:10px;align-items:center;border:0;background:none;padding:4px 0;text-align:left;width:100%;border-radius:8px}
+.hbar:hover .trk{outline:1px solid var(--line-2)}
+.hbar[aria-pressed="true"] .lbl{color:var(--blue);font-weight:700}
+.hbar .lbl{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hbar .trk{height:24px;background:var(--surface-2);border-radius:6px;display:flex;overflow:hidden}
+.hbar .seg1{background:var(--blue)} .hbar .seg2{background:var(--red)} .hbar .segy{background:var(--yellow)}
+.hbar.stack{grid-template-columns:1fr auto;gap:4px 10px;padding:6px 0}.hbar.stack .lbl{white-space:normal}.hbar.stack .trk{grid-column:1/-1;height:16px}
+.hbar .val{font-family:var(--fc);font-weight:600;font-size:18px;text-align:right;font-variant-numeric:tabular-nums}
+.legend{display:flex;gap:14px;font-size:14px;color:var(--ink-2);margin:0 0 10px;flex-wrap:wrap}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.split{display:flex;height:46px;border-radius:10px;overflow:hidden;margin:6px 0 10px}
+.split div{display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;min-width:0}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th{text-align:left;color:var(--ink-2);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tscroll{overflow-x:auto}
+svg text{fill:var(--ink-2);font-family:var(--f);font-size:12px}
+
+@media (max-width:900px){.kpis{grid-template-columns:repeat(3,1fr)}.grid2{grid-template-columns:1fr}}
+@media (max-width:640px){
+  body{font-size:16px} main{padding:16px 12px 150px}
+  h1{font-size:28px}.busrow{grid-template-columns:1fr}.sum{grid-template-columns:repeat(2,1fr)}
+  .kpis{grid-template-columns:repeat(2,1fr)}.kpi b{font-size:32px}
+  .hbar{grid-template-columns:96px 1fr 60px}
+  .sim .lbl{display:none}.top-in{padding:8px 12px}
+  .stage-head .bus{font-size:32px}.code .big{font-size:52px}
+}
+</style>
+</head>
+<body>
+<header class="top"><div class="top-in">
+  <div class="brand">
+    <svg width="38" height="34" viewBox="0 0 38 34" aria-hidden="true"><path d="M20 0h18l-7 10H13z" fill="#FFD200"/><path d="M8 12h18l-7 10H1z" fill="#1E388F"/><path d="M16 24h18l-7 10H9z" fill="#D3141B"/></svg>
+    <div><b>Control de Línea</b><small>Línea de acabados</small></div>
+  </div>
+  <nav class="tabs" aria-label="Secciones">
+    <button data-act="tab" data-v="inicio" id="tab-inicio">Trabajos</button>
+    <button data-act="tab" data-v="dash" id="tab-dash">Indicadores</button>
+  </nav>
+  <div class="sim" title="Reloj simulado para probar el prototipo">
+    <span class="lbl">Reloj demo</span><span class="clock" id="clock">--:--</span>
+    <select id="speed" aria-label="Velocidad del reloj de demostración">
+      <option value="1">×1</option><option value="30">×30</option><option value="120">×120</option><option value="600">×600</option>
+    </select>
+  </div>
+</div></header>
+<main id="app"></main>
+<div id="bar"></div>
+<dialog id="dlg"><div class="dlg" id="dlgc"></div></dialog>
+<script>
+const DATA={"combos":[["ZEUS5","L2","E21"],["ZEUS5","L2","E22"],["ZEUS5","L2","E23"],["ZEUS5","L2","E24"],["ZEUS5","L2","E25"],["ZEUS5","L2","E26"],["ZEUS5","L2","E27"],["ZEUS5","L2","E28"],["ZEUS5","L2","1° - MF PAQUETERA"],["ZEUS5","L2","2° - MF PAQUETERA"],["360F","L2","E21"],["360F","L2","E22"],["360F","L2","E23"],["360F","L2","E24"],["360F","L2","E25"],["360F","L2","E26"],["360F","L2","E27"],["360F","L2","E28"],["360F","L2","MF PAQUETERA"],["APOLO X","L1","E21"],["APOLO X","L1","E22"],["APOLO X","L1","E23"],["APOLO X","L1","E24"],["APOLO X","L1","E25"],["APOLO X","L1","E26"],["APOLO X","L1","E27"],["APOLO X","L1","E28"],["APOLO X","L1","E29"],["APOLO X","L1","MF PAQUETERA"],["TUDFG","L1","E21"],["TUDFG","L1","E22"],["TUDFG","L1","E23"],["TUDFG","L1","E24"],["TUDFG","L1","E25"],["TUDFG","L1","E26"],["TUDFG","L1","E27"],["TUDFG","L1","E28"],["TUDFG","L1","E29"],["TUVWG","L1","E21"],["TUVWG","L1","E22"],["TUVWG","L1","E23"],["TUVWG","L1","E24"],["TUVWG","L1","E25"],["TUVWG","L1","E26"],["TUVWG","L1","E27"],["TUVWG","L1","E28"],["TUVWG","L1","E29"]],"clientes":[["OTRO","OP"],["ALLIN BUS","AL"],["Bariloche","BA"],["CARRASCO & MURGA","CM"],["CHOCANO","CN"],["CHICLAYO","CH"],["CHILEBUS","CB"],["CIVA","CV"],["COLOMBIA","CO"],["CORMAR","CR"],["Corvival","VV"],["EME BUS","EM"],["ETM","ET"],["ETULL","EL"],["HUALPEN","HU"],["INSTABUS","IB"],["JETSUR","JS"],["KENNY BUS","KB"],["LINATAL","LN"],["MEXIGO","MX"],["MOQUEGUA","MQ"],["NORTRANS","NT"],["OCAS","OC"],["PULLMAN","PM"],["ROMANI","RM"],["SAGITARIO","SG"],["SANTA ROSA","SR"],["SCANIA","SC"],["STOCK","ST"],["TLP","TL"],["TOUR CABRERA","TC"],["VIGOTOUR","VG"],["VOLVO","VO"],["HUAMBOCANCHA","HM"],["INVHABRAHM","IV"],["AUTOMOTRIZ ANDINA","AD"],["HENATEC","HC"],["CRUZ DEL CENTRO","CC"],["HENOS PONCE","HP"],["LA CALERA","CL"]],"resp":{"L1|E21":"PABLO CESAR TITO MAMANI","L1|E22":"LUIS ALBERTO QUISPE VALERA","L1|E23":"LUIS ALBERTO QUISPE VALERA","L1|E24":"LUIS ALBERTO QUISPE VALERA","L1|E25":"DAVID RUBEN SANDY ALVARADO","L1|E26":"DAVID RUBEN SANDY ALVARADO","L1|E27":"LUIS DANIEL SIMON QUISPE","L1|E28":"LUIS DANIEL SIMON QUISPE","L1|E29":"DAVID RUBEN SANDY ALVARADO","L2|E21":"SALOMON CORREA GARCIA","L2|E22":"SALOMON CORREA GARCIA","L2|E23":"ROYER CARITIMARI FLORES","L2|E24":"ALEX CHARLES SEGURA CERVANTES","L2|E25":"DAVID SAUL JIHUAÑA ARUCUTIPA","L2|E26":"WILMER DAVID ARMAS ISLA","L2|E27":"LUIS DANIEL SIMON QUISPE","L2|E28":"LARRY RODRIGUEZ ROSERO"},"std":{"L1":360,"L2":270},"motivos":["Gestión de piso (falta de personal)","Gestión de piso (Personal en otra estación)","Falta de componente de fibra de vidrio","Falta de componente de pintura","Falta de herramientas","Falla de mantenimiento","Falta de suministros","Falla estructural del bus","Falta de componentes de almacén","Falta de asientos","Falta de materiales de pintura electrostática","Falta de materiales de pintura lÍquida","Problemas de calidad","Problemas en sistema eléctrico","Problema mecánico","Problemas de Ingeniería","Movimiento de línea","Falta de instalación de materiales"],"act":{"360F|L2|E21":[["Lijar zona cabina",100.0],["Lijar zona banca posterior",100.0],["Lijar zona salon",100.0],["Lijar estribo",100.0],["Lijar zona de escalera",100.0],["Lijar zona de camarote",100.0],["Masillar zona cabina",100.0],["Masillar zona banca posterior",100.0],["Masillar zona salon",100.0],["Masillar estribo",100.0],["Masiillar zona de escalera",100.0],["Masillar zona de camarote",100.0],["Tapizar zona cabina",100.0],["Tapizar zona banca posterior",100.0],["Tapizar zona salon",100.0],["Tapizar estribo",100.0],["Tapizar zona de escalera",100.0],["Tapizar zona de camarote",100.0],["Instalar jebe de trampilla",100.0],["Vulcanizar zona salon",100.0],["Vulcanizar zona cabina",100.0],["Vulcanizar zona estribo",100.0],["Vulcanizar zona banca posterior",100.0],["Vulcanizar zona de camarotee",100.0],["Colocar tope de trampilla",100.0],["Colocar topes decorativos",100.0]],"360F|L2|E22":[["Instalar laterales lado piloto",100.0],["Instalar laterales lado copiloto",100.0],["Instalar cúpula posterior",100.0],["Instalar perfil de ventana lado piloto",100.0],["Instalar perfil de ventana lado copiloto",100.0],["Colocar postes lado piloto",100.0],["Colocar postes lado copiloto",100.0],["Instalar terminal de poste piloto y copiloto",100.0],["Cuadrar techo de salón",100.0],["Pegar paneles de techo",100.0],["Colocar tecnopor en laterales",100.0],["Instalar mamapara piloto",100.0],["Instalar mamparara copiloto",100.0],["Instalar vidrio de mamapara piloto y copiloto",100.0],["Instalar plancha estrellada pasadizo",100.0],["Instalar plancha estrellada cabina",100.0],["Instalar plancha estrellada estribo",100.0],["Instalar estribo fibra de vidrio (escalera)",100.0],["Instalar rejilla de aire acondisionado",100.0],["Colocar paquetera",100.0],["Instalar lateral de baño",100.0],["Intalación cubierta de papelera",100.0],["Instalar collarin de baño",100.0],["Instalar caja de aire en bodega",100.0]],"360F|L2|E23":[["Instalar cúpula de cabina",100.0],["Instalar laterales de cabina piloto",100.0],["Instalar laterales de cabina copiloto",100.0],["Instalar consola",100.0],["Instalar renovadores de aire",100.0],["Fijar paquetera",100.0],["Instalar bisel de claraboya",100.0],["Colocar cantonera en salon",100.0],["Colocar cantonera en escalera",100.0],["Colocar cantonera en cabina",100.0],["Colocar cantonera en bodega",100.0],["Pegar de cinta extrema",100.0],["Instalar escarpines",100.0]],"360F|L2|E24":[["Instalar tapa de motor",100.0],["Instalar puerta de salón",100.0],["Instalar plancha FOAM (paquetera)",100.0],["Instalar bandeja de fibra de vidrio en paquetera",100.0],["Instalar monitores",100.0],["Iinstalar punteras",100.0],["Instalar rejilla de evaporador",100.0]],"360F|L2|E25":[["Instalar vidrio parabrisa",100.0],["Instalar vidrio vigia",100.0],["Instalar tapa de inspección de salón",100.0]],"360F|L2|E26":[["Instalar de ventanas lado piloto",100.0],["Instalar de ventanas lado copiloto",100.0],["Instalar de cortaviento lado piloto",100.0],["Instalar de cortaviendo lado copiloto",100.0],["Instalar de ventana de camarote lado piloto",100.0],["Instalar de ventana de puerta camarote lado copiloto",100.0],["Instalar ventana puerta piloto",100.0],["Instalar ventana puerta copiloto",100.0],["Colocar puerta piloto",100.0],["Colocar puerta copiloto",100.0],["Colocar brazo pantográfico",100.0],["Instalar asiento piloto",100.0],["Colocar pasamano de cabina  + tope",100.0],["Colocar grecas amarillas",100.0],["Instalar bisel de consola",100.0],["Colocar tapasol en cabina",100.0],["Instalar portadocumentos",100.0],["Instalar botiquin",100.0],["Instalar portabotella",100.0],["Instalar portaextintor",100.0],["Colocar tapa de inspección en cabina",100.0],["Colocar cubrecable piloto",100.0],["Colocar cubrecable copiloto",100.0],["Colocar tapas de cúpula",100.0],["Instalar tapa de centralia",100.0],["Colocar letrero de ruta",100.0],["Colocar sujetadores de cortina",100.0],["Instalar posa pies de cabina",100.0],["Instalar porta cinturon",100.0],["Colocar rejilla de aire en cabina",100.0],["Instalar terminal de mampara",100.0],["Colocar tapa de inspección en salón",100.0],["Colocar martillo de emergencia",100.0],["Instalar tapas de cúpula",100.0],["Instalar plafonier",100.0],["Colocar sujetadores de cortina en salón",100.0],["Instalación de caja de herramientas",100.0],["Instalar base de gata en bodega",100.0],["Sellar vidrio vigia + faro",100.0],["Sellar vidrio parabrisa + faro",100.0],["Sellar bodega",100.0],["Sellar cortaviendo lado piloto ",100.0],["Sellar cortaviendo lado copiloto ",100.0],["sellar claraboya",100.0]],"360F|L2|E27":[["Sellar ventana lado piloto",100.0],["Sellar ventana lado copiloto",100.0],["Sellar de luminaria techo piloto",100.0],["Sellar de luminaria techo copiloto",100.0],["Sellar puerta piloto",100.0],["Sellar puerta copiloto",100.0],["Sellar marco de puerta piloto",100.0],["Sellar marco de puerta copiloto",100.0],["Sellar posa pies cabina",100.0],["Sellar decorativo piloto",100.0],["Sellar decorativo copiloto",100.0],["Sellar pasarruedas piloto",100.0],["Sellar pasarruedas copiloto",100.0],["Sellado lateral piloto",100.0],["Sellado lateral copiloto",100.0],["Sellar ventana de camarote ",100.0],["Sellar puerta de camarote",100.0],["Sellar decorativo posterior piloto",100.0],["Sellar decorativo posterior copiloto",100.0],["Sellado de cabina",100.0]],"360F|L2|MF PAQUETERA":[["PAQUETERA PILOTO",100.0],["PAQUETERA COPILOTO",100.0]],"APOLO X|L1|E21":[["Lijar zona cabina",100.0],["Lijar zona banca posterior",100.0],["Lijar zona salon",100.0],["Lijar estribo",100.0],["Masillar zona cabina",100.0],["Masillar zona banca posterior",100.0],["Masillar zona salon",100.0],["Masillar estribo",100.0],["Tapizar zona cabina",100.0],["Tapizar zona banca posterior",100.0],["Tapizar zona salon",100.0],["Tapizar estribo",100.0],["Instalar jebe de trampilla de boega",100.0],["Instalación de chapa",100.0],["Instalación de tapas decorativas",100.0],["Instalación de topes de trampilla frontal",100.0],["Instalación de topes de tanque de combustible",100.0],["Instalación de mecanismo de chapa",100.0],["Instalación de jebe de trampilla posterior",100.0]],"APOLO X|L1|E22":[["Instalar techo",100.0],["Instalar cúpula posterior",100.0],["Instalar rejilla aire acondisionado",100.0],["Instalar cúpula de cabina",100.0],["Instalar lateral de cabina piloto",100.0],["Instalar lateral de cabina copiloto",100.0],["Instalar lateral salon",100.0],["Instalar perfil de ventana",100.0],["Instalar postes de ventana",100.0],["Instalar poste terminal",100.0],["Instalar plancha estrellada salón",100.0],["Instalar plancha estrellada estribo",100.0],["Instalar mampara piloto",100.0],["Instalar mamapara copiloto",100.0],["Instalar vidrio de mampara piloto",100.0]],"APOLO X|L1|E23":[["Colocar paquetera",100.0],["Instalar consola",100.0],["Instalar tapa de motor",100.0],["Instalar bisel de claraboya",100.0],["Colocar cantonera banca posterior",100.0],["Colocas cantonera estribo",100.0],["Colocar cantonera cabina",100.0],["Intalar escarpin",100.0],["Instalar renovadores de aire ",100.0],["Pegar cina extrema",100.0],["Instalar cubrepierna",100.0]],"APOLO X|L1|E24":[["Fijar paquetera",100.0],["Instalar bandeja de paquetera",100.0],["Instalar plancha foam de paquetera",100.0],["Instalar caja de evaporador",100.0],["Instalar puntera de paquetera",100.0],["Instalar tapa tornilo de paquetera",100.0],["Instalar monitores",100.0]],"APOLO X|L1|E25":[["Instalar ventana lado piloto",100.0],["Instalar ventana lado copiloto",100.0],["Instalar parabrisa",100.0],["Instalar cortaviento piloto",100.0],["Instalar cortaviento copiloto",100.0],["Instalar vidrio vigia",100.0],["Sellar ventana superiores lado piloto + luminaria",100.0],["Sellar ventana superiores lado copiloto + luminaria",100.0]],"APOLO X|L1|E26":[["Instalar puerta piloto",100.0],["Instalar puerta copiloto",100.0],["Instalar posapies",100.0],["Instalar cubierta de paquetera copiloto",100.0],["Instalar cubierta de paquetera piloto",100.0],["Instalar cubierta posterior R66",100.0],["Instalar plafonier paquetera",100.0],["Instalar portapapelera",100.0],["Instalar letrero de ruta",100.0],["Instalar tapasol",100.0],["Sellar claraboya",100.0],["Sellar cortavientos piloto y copiloto",100.0]],"APOLO X|L1|E27":[["Instalar tapa de chapa puerta piloto",100.0],["Pegar vidirio puerta piloto",100.0],["Pegar vidrio de puerta piloto",100.0],["Instalar espejo piloto y copiloto",100.0],["Instalar tapacable piloto y copiloto",100.0],["Instalar pasamano + tope de puerta",100.0],["Instalar tapas en cúpula de cabina",100.0],["Instalar tapa en cúpula posterior",100.0],["Instalar sujetadores de cortina salon ",100.0],["Instalar sujetadores de cortina cabina ",100.0],["Instalar liga porta equipaje paquetera",100.0],["Instalar asiento en salón",100.0],["Instalar portabotella salón",100.0],["Instalar portabotella cabina",100.0],["Instalar bisel de consola",100.0],["Instalar botiquin",100.0]],"APOLO X|L1|E28":[["Colocar decorativo piloto",100.0],["Colodar decorativo copiloto",100.0],["Instalar tapa de pistón en puerta copiloto",100.0],["Instalar tapa de inspección + bisel en cabina",100.0],["Sellar bodega piloto",100.0],["Sellar bodega copiloto",100.0],["Sellar bodega posterior",100.0],["Sellar cabina",100.0],["Sellar decorativo piloto",100.0],["Sellar decorativo copiloto",100.0],["Sellar consola",100.0],["Sellar marco de puerta piloto",100.0],["Sellar marco de puerta copiloto",100.0],["Sellar puerta piloto",100.0],["Sellar puerta copiloto",100.0],["Sellar decorativo puerta piloto",100.0],["Sellar decorativo puerta copiloto",100.0],["Sellar puerta piloto interior",100.0],["Sellar puerta copiloto interior",100.0],["Sellar mampara salon y techo",100.0],["Sellar centralia - consola",100.0],["Sellar marco de tapa de motor",100.0]],"APOLO X|L1|E29":[["REMATE SALON",100.0],["REMATE CABINA",100.0],["REMATE EXTERIOR",100.0]],"APOLO X|L2|MF PAQUETERA":[["PAQUETERA PILOTO",100.0],["PAQUETERA COPILOTO",100.0]],"TUDFG|L1|E21":[["Lijar zona salón",100.0],["Lijar pasarruedas",100.0],["Lijar Zona cabina",100.0],["Lijar banca posteiror",100.0],["Masillar zona salón",100.0],["Masillar pasarruedas",100.0],["Masillar Zona cabina",100.0],["Masillar banca posterior",100.0],["Tapizar zona salón",100.0],["Tapizar pasarruedas",100.0],["Tapizar Zona cabina",100.0],["Tapizar banca posterior",100.0],["Colocar jebe de pasarruendas",100.0],["Instalar tapas decorativas",100.0],["Instalar topes",100.0],["Vulcanizado de salón",100.0],["Vulcanizado de cabina",100.0],["Vulcanizado de banca posterior",100.0]],"TUDFG|L1|E22":[["Instalar laterales lado piloto",100.0],["Instalar laterales lado copiloto",100.0],["Instalar plancha estrellada en pasadizo",100.0],["Intalar plancha estrellada en estribo",100.0],["Colocar plancha sol lado piloto",100.0],["Colocar plancha sol lado copiloto",100.0],["Instalar perfil de ventana ",100.0],["Instalar lateral de cabina",100.0],["Instalar de techo",100.0],["Instalar cúpula posterior",100.0],["Instalar fibra de vidrio de letrero de ruta",100.0],["Instalar fibra de vidrio de estribo",100.0]],"TUDFG|L1|E23":[["Instalar centralia",100.0],["Instalar consola",100.0],["Instalar bisel de claraboya",100.0],["Instalar pasamano en techo",100.0],["Instalar mampara lado piloto",100.0],["Instalar mampara puerta posterior",100.0],["Instalar mampara puerta delantera",100.0],["Instalar perfil j - plafonier techo",100.0],["Instalar pasamanos lateral copiloto",100.0]],"TUDFG|L1|E24":[["Instalar cantonera pasarueda salón",100.0],["Instalar cantonera estribo delantero",100.0],["Instalar cantonera estribo posterior",100.0],["instalar cantonera en cabina",100.0],["Instalar cantonera en cúpula posterior",100.0],["Instalar cantonera en fibra letrero de ruta",100.0],["Instalar cantonera en banca posterior",100.0],["Instalar cantonera en borde de motor",100.0],["Instalar tapa de motor",100.0],["Instalar pasamanos",100.0]],"TUDFG|L1|E25":[["Instalar tapa de inspección salón",100.0],["Intalar tapa de inspección banca posterior",100.0],["Colocar ventana lado piloto",100.0],["Colocar ventana lado copiloto",100.0],["Instaar parabrisa",100.0],["Instalar vidrio vigia",100.0]],"TUDFG|L1|E26":[["Instalar puerta piloto",100.0],["Instalar puerta copiloto",100.0],["Instalar letrero de ruta",100.0],["Instalar martillo de emergencia",100.0],["Instalar tapa de cúpula posterior",100.0],["Instalar vidrio de letrero de ruta",100.0],["Instalar plafonier piloto",100.0],["Instalar plafonier copiloto",100.0],["Instalar rejilla lateral cabina",100.0]],"TUDFG|L1|E27":[["Instalar botiquin",100.0],["Instalar tapasol",100.0],["Instalar bisel de consola",100.0],["Instalar tapas en consola (4 unidades)",100.0],["Instalar codera + tapa en lateral de cabina",100.0],["Instalar cubierta en puerta piloto",100.0],["Instalar cubierta en puerta copiloto",100.0],["Instalar espejo retrovisor",100.0],["Instalar asiento piloto",100.0],["Instalar cinturon piloto",100.0],["Instalar pasamanos verticales",100.0],["Instalar bisel de caja de cambio",100.0],["Sellar ventanas piloto superior",100.0],["Sellar ventanas copiloto superior",100.0],["Sellar ventanas piloto lateral",100.0],["Sellar ventanas copiloto lateral",100.0],["Sellar vidrio vigia",100.0]],"TUDFG|L1|E28":[["Sellar ventana piloto inferior",100.0],["Sellar ventanas piloto ingerior",100.0],["Sellar estribo",100.0],["Sellar claraboya",100.0],["Selar vidrio de letrero de ruta",100.0],["Sellar lateral piloto",100.0],["Sellar lateral copiloto",100.0],["Sellar parabrisas + faro",100.0],["Sellar consola",100.0],["Instalar espejo piloto",100.0],["Instalar espejo copiloto",100.0],["Instalar correlluvia",100.0],["Instalar cubrecable piloto",100.0],["Instalar cubrecable copiloto",100.0],["Instalar sencillera",100.0]],"TUDFG|L1|E29":[["REMATE SALON",100.0],["REMATE CABINA",100.0],["REMATE EXTERIOR",100.0]],"TUVWG|L1|E21":[["Lijar zona salón",100.0],["Lijar pasarruedas",100.0],["Lijar Zona cabina",100.0],["Lijar banca posteiror",100.0],["Masillar zona salón",100.0],["Masillar pasarruedas",100.0],["Masillar Zona cabina",100.0],["Masillar banca posterior",100.0],["Tapizar zona salón",100.0],["Tapizar pasarruedas",100.0],["Tapizar Zona cabina",100.0],["Tapizar banca posterior",100.0],["Colocar jebe de pasarruendas",100.0],["Instalar tapas decorativas",100.0],["Instalar topes",100.0],["Vulcanizado de salón",100.0],["Vulcanizado de cabina",100.0],["Vulcanizado de banca posterior",100.0]],"TUVWG|L1|E22":[["Instalar laterales lado piloto",100.0],["Instalar laterales lado copiloto",100.0],["Instalar plancha estrellada en pasadizo",100.0],["Intalar plancha estrellada en estribo",100.0],["Colocar plancha sol lado piloto",100.0],["Colocar plancha sol lado copiloto",100.0],["Instalar perfil de ventana ",100.0],["Instalar lateral de cabina",100.0],["Instalar de techo",100.0],["Instalar cúpula posterior",100.0],["Instalar fibra de vidrio de letrero de ruta",100.0],["Instalar fibra de vidrio de estribo",100.0]],"TUVWG|L1|E23":[["Instalar centralia",100.0],["Instalar consola",100.0],["Instalar bisel de claraboya",100.0],["Instalar pasamano en techo",100.0],["Instalar mampara lado piloto",100.0],["Instalar mampara puerta posterior",100.0],["Instalar mampara puerta delantera",100.0],["Instalar perfil j - plafonier techo",100.0],["Instalar pasamanos lateral copiloto",100.0]],"TUVWG|L1|E24":[["Instalar cantonera pasarueda salón",100.0],["Instalar cantonera estribo delantero",100.0],["Instalar cantonera estribo posterior",100.0],["instalar cantonera en cabina",100.0],["Instalar cantonera en cúpula posterior",100.0],["Instalar cantonera en fibra letrero de ruta",100.0],["Instalar cantonera en banca posterior",100.0],["Instalar cantonera en borde de motor",100.0],["Instalar tapa de motor",100.0],["Instalar pasamanos",100.0]],"TUVWG|L1|E25":[["Instalar tapa de inspección salón",100.0],["Intalar tapa de inspección banca posterior",100.0],["Colocar ventana lado piloto",100.0],["Colocar ventana lado copiloto",100.0],["Instaar parabrisa",100.0],["Instalar vidrio vigia",100.0]],"TUVWG|L1|E26":[["Instalar puerta piloto",100.0],["Instalar puerta copiloto",100.0],["Instalar letrero de ruta",100.0],["Instalar martillo de emergencia",100.0],["Instalar tapa de cúpula posterior",100.0],["Instalar vidrio de letrero de ruta",100.0],["Instalar plafonier piloto",100.0],["Instalar plafonier copiloto",100.0],["Instalar rejilla lateral cabina",100.0]],"TUVWG|L1|E27":[["Instalar botiquin",100.0],["Instalar tapasol",100.0],["Instalar bisel de consola",100.0],["Instalar tapas en consola (4 unidades)",100.0],["Instalar codera + tapa en lateral de cabina",100.0],["Instalar cubierta en puerta piloto",100.0],["Instalar cubierta en puerta copiloto",100.0],["Instalar espejo retrovisor",100.0],["Instalar asiento piloto",100.0],["Instalar cinturon piloto",100.0],["Instalar pasamanos verticales",100.0],["Instalar bisel de caja de cambio",100.0],["Sellar ventanas piloto superior",100.0],["Sellar ventanas copiloto superior",100.0],["Sellar ventanas piloto lateral",100.0],["Sellar ventanas copiloto lateral",100.0],["Sellar vidrio vigia",100.0]],"TUVWG|L1|E28":[["Sellar ventana piloto inferior",100.0],["Sellar ventanas piloto ingerior",100.0],["Sellar estribo",100.0],["Sellar claraboya",100.0],["Selar vidrio de letrero de ruta",100.0],["Sellar lateral piloto",100.0],["Sellar lateral copiloto",100.0],["Sellar parabrisas + faro",100.0],["Sellar consola",100.0],["Instalar espejo piloto",100.0],["Instalar espejo copiloto",100.0],["Instalar correlluvia",100.0],["Instalar cubrecable piloto",100.0],["Instalar cubrecable copiloto",100.0],["Instalar sencillera",100.0]],"TUVWG|L1|E29":[["REMATE SALON",100.0],["REMATE CABINA",100.0],["REMATE EXTERIOR",100.0]],"ZEUS5|L2|1° - MF PAQUETERA":[["PAQUETERA PRIMER NIVEL PILOTO",100.0],["PAQUETERA PRIMER NIVEL COPILOTO",100.0]],"ZEUS5|L2|2° - MF PAQUETERA":[["PAQUETERA SEGUNDO NIVEL PILOTO",100.0],["PAQUETERA SEGUNDO NIVEL COPILOTO",100.0]],"ZEUS5|L2|E20":[["ACTIVIDAD RUTINARIA",100.0],["ACTIVIDAD NO RUTINARIA",100.0]],"ZEUS5|L2|E21":[["Masillar Zona de cabina",198.0],["Masillar Zona de salón 1° nivel",252.0],["Masillar Zona de salón 2° nivel",366.0],["Masillar Zona de pasillo",192.0],["Masillar zona de escalera",198.0],["Lijar Zona de cabina",102.0],["Lijar Zona de salón 1° nivel",198.0],["Lijar Zona de salón 2° nivel",600.0],["Lijar Zona de pasillo",48.0],["Lijar Zona de escalera",48.0],["Tapizar zona de cabina",402.0],["Tapizar zona de salón 1° nivel",450.0],["Tapizar zona de salón 2° nivel",450.0],["Tapizar zona de pasillo",120.0],["Tapizar zona de escalera",300.0],["Tapizar zona banca posterior 2° nivel",150.0],["Tapizar zona banca posterior 1° nivel",150.0],["Instalar topes de trampilla",102.0],["Instalar topes de trampilla exterior",48.0],["Colocar jebe de trampilla",300.0],["Instalar ducto de baño",150.0],["Instalar deflector de trampilla",300.0]],"ZEUS5|L2|E22":[["Rejilla intercoler",324.0],["Colocar cúpula delantera 2°nivel",138.0],["Colocar cúpula trasera 2° nivel",120.0],["Colocar laterales primer nivel",58.8],["Colocar laterales segundo nivel",105.0],["Colocar perfil de ventana del primer nivel LHD & RHD",60.0],["Colocar perfil de ventana del segundo nivel LHD & RHD",45.6],["Colocar postes primer nivel LHD & RHD",66.6],["Colocar postes segundo nivel LHD & RHD",91.8],["Colocar fibra posterior de banca",59.4],["Colocar fibra posterior lateral LHD & RHD 1er nivel",57.6],["Vulcanizar zona de cabina",28.2],["Vulcanizar zona de salón 1° nivel",27.0],["Vulcanizar zona de salón 2° nivel",15.0],["Vulcanizar zona de pasillo",14.4],["Vulcanizar zona de escalera",87.0],["Colocar techo 2° nivel",230.4],["Colocar manparas LHD & RHD",39.6],["Intsalar plancha composite",68.4],["Colocar vidrio de manpara RHD",39.6],["Colocación de fibra de vidrio de manpara LHD",48.0]],"ZEUS5|L2|E23":[["Montar consola 2° nivel",1200.0],["Montar mueble de frigobar 2° nivel",1170.0],["Instalar puerta de Camarote",228.0],["Instalar puerta centralía en bodega",192.0],["Instalar renovadores de aire",1500.0],["Instalar cinta de sellado extremo",180.0],["Colocar Cúpula Frontal 1° nivel",636.0],["Colocar techo de cabina",690.0],["Colocar lateral de cabina LHD & RHD",714.0],["Colocar FV lateral de pasillo LHD & RHD",744.0],["Colocar caja de estribo",456.0],["Colocar esquinero de estribo",258.0],["Colocar complemento lateral de cabina piloto",354.0],["Colocar techo de baño",300.0],["Instalar rejillas renovadoras 2° nivel",300.0],["Sellar cantoneras en bodega",420.0],["Instalar bisel de claraboya",1398.0],["Decorativo de vidrio techo 1° nivel",1800.0],["Instalar collarin de frigobar",450.0]],"ZEUS5|L2|E24":[["Montar consola 1° nivel",984.0],["Instalar puertas de centralía",307.8],["Instalar cantoneras en bodega",1080.0],["Fijar paquetera 2° nivel",2400.0],["Pegar fibra de vidrio techo salón (1° nivel)",1392.0],["Fijar paquetera 1° nivel",360.0],["Instalar cobra de paquetera 1° piso",732.0],["Instalar cantoneras en cabina",450.0],["Sellar cantoneras en cabina",450.0],["Instalar base monitor 1° nivel",300.0],["Instalar base monitor 2° nivel",900.0],["Instalar monitores 2° nivel",570.0],["Instalar cantonera 2° nivel",306.0],["Instalar leds en escalera",1200.6],["Instalar puerta pasillo mampara",1038.0],["Instalar puerta de mampara",1200.0],["Sellar cantonera en salon",1506.0],["Instalar bandeja de paquetera",2400.0],["Instalar plancha foam",1500.0],["Sellar cantoneras 2° nivel",588.0],["Instalar cantonera en salon",510.0],["Instalar caja de válvulas",307.8],["Instalar rejilla de aire acondisionado",2100.0],["Instalar escarpines",400.0],["Tapatornillo de paquetera",198.0],["Instalar destaje de paquetera central",1200.0]],"ZEUS5|L2|E25":[["Instalar ventanas lado piloto 2do nivel",1872.0],["Instalar ventanas lado copiloto 2do nivel",936.0],["Instalar parabrisas piloto 1er nviel",1884.0],["Instalar parabrisas piloto 2do nivel",1344.0],["Instalar vidrio vigia",1224.0],["Sellar ventanas laterales y superiores LHD segundo nivel",94.8],["Colocar y sellar jebe de parabrisa primer nivel",900.0]],"ZEUS5|L2|E26":[["Colocar Asientos piloto",690.0],["Colocar puntera delantera y trasera de paquetera 2° nivel",1250.0],["Colocar ventana puerta de discapacitado",450.0],["Colocar ventana puerta de servicio",882.0],["Colocar ventanas  puerta copiloto",600.0],["Colocar ventanas  puerta piloto",600.0],["Cubierta de espejo retrovisor",198.0],["Decorativo puerta",168.0],["Inst. Cubierta de Chapa Puerta Piloto / Copiloto",144.0],["Instalar base de gata + trinco",102.0],["Instalar base letreto de ruta",100.0],["Instalar bisel de tablero de consola",252.0],["Instalar botiquin",150.0],["Instalar cafetera",198.0],["Instalar caja de aire acondisionado",252.0],["Instalar caja de break",66.0],["Instalar caja de DVD",198.0],["Instalar caja de herramientas",49.8],["Instalar componente de cubre cable piloto",100.0],["Instalar correas de plafonier",180.0],["Instalar cubierta aire acondicionado",600.0],["Instalar cubierta espejo 1+2",198.0],["Instalar cubre cabe 1 + 2 de manguera de calefacción",100.0],["Instalar cubre cable de 1+2",198.0],["Instalar de plafonier",102.0],["Instalar delimitador de puerta con dos soportes LHD+RHD",378.0],["Instalar grecas amarillas",210.0],["Instalar letrero de ruta",300.0],["Instalar martillo de 1° nivel",300.0],["Instalar monitores 1° nivel",100.0],["Instalar mueble de 1° nivel",100.0],["Instalar pantografico superior",100.0],["Instalar pantonera con greca",100.0],["Instalar pasamanos",100.0],["Instalar pasamanos de escalera",100.0],["Instalar plancha inox en baño",100.0],["Instalar porta botella",100.0],["Instalar porta documentos",100.0],["Instalar porta extintor",100.0],["Instalar puerta de discapacitado",100.0],["Instalar puerta de servicio",100.0],["Instalar puerta lado copiloto",100.0],["Instalar puerta lado piloto",100.0],["Instalar rejilla de mueble",100.0],["Instalar rejilla posterior y filtro",100.0],["Instalar tapa de consola 1+2",100.0],["Instalar tapa de faro",100.0],["Instalar tapa de inspección en salon",100.0],["Instalar tapa de manguera de calefacción de aluminio",100.0],["Instalar tapa de protector",100.0],["Instalar tapa de tanque de agua",100.0],["Instalar tapa de visagra LHD + RHD",100.0],["Instalar tapa delantera de cupula",100.0],["Instalar tapas de cupula",100.0],["Instalar tapas de cupula posterior (4 unidades)",100.0],["Instalar tapas de espejo",100.0],["Instalar tapasol",100.0],["Instalar templador de puertas",100.0],["Instalar terminal de mampara",100.0],["Instalar tope de puertas interiores",100.0],["Instalar ventanas lado copiloto 1er nivel",100.0],["Instalar ventanas lado piloto 1er nivel",100.0],["Instalar vidrio monitor",100.0],["Intalar tapa de consola",100.0],["Inyectado bajo de la consola",100.0],["Regular tapas de baño",100.0],["Rejilla de bateria",100.0],["Tapa de inspección de bodega",100.0]],"ZEUS5|L2|E27":[["Instalar bisel de letrero de ruta",100.0],["Instalar sujetadores de cortina LHD + RHD",100.0],["Instalar tapa de conector en paquetera",100.0],["Colocar tapa de pantografico de puerta de servicio",100.0],["Instalar bisel de baño",100.0],["Instalar rejilla de paquetera",100.0],["Instalar tapa de cubierta de calefacción",100.0],["Instalar rejilla de defogue",100.0],["Colocar tapa de frigobar",100.0],["Sellar bodega",100.0],["Sellar cortaviento primer nivel",100.0],["Sellar cortaviendo segundo nivel",100.0],["Sellar cortaviendo de baño",100.0],["Sellar claraboya",100.0],["Sellar cabina (interior) superior",100.0],["Sellar cabina (interior) inferior",100.0],["Sellar puertas interiores LHD",100.0],["Sellar puertas interiores RHD",100.0],["Sellar ventanas LHD primer nivel",100.0],["Sellar ventanas RHD primer nivel",100.0],["Sellar ventanas inferiores LHD segundo nivel",100.0],["Sellar ventanas inferiores RHD segundo nivel",100.0],["Sellar marco de trampilla LHD",100.0],["Sellar marco de trampilla RHD",100.0],["Sellar pasaruedas LHD",100.0],["Sellar pasaruedas RHD",100.0],["Sellar interior de puerta central",100.0],["Sellar interior de puerta discapacitados (variable)",100.0],["Sellar decorativo de fibra LHD",100.0],["Sellar decorativo de fibra RHD",100.0],["Sellar faro LHD",100.0],["Sellar faro RHD ",100.0],["Sellar luminaria de techo LHD",100.0],["Sellar luminaria de techo RHD",100.0],["Sellar parabrisas de segundo nivel + faro",100.0],["Sellar vidrio vigia + faro",100.0],["Instalar topes protectores",100.0],["Instalar tapa de espejo 1+2",100.0],["Instalar cortinas LHD + RHD",100.0],["Instalar componente de cubre cable copiloto",100.0]],"ZEUS5|L2|E28":[["REMATE EXTERIOR",100.0],["REMATE CABINA",100.0],["REMATE SALÓN",100.0],["REMATE SEGUNDO NIVEL",100.0],["REMATECAMAROTE",100.0]]}};
+
+/* ===== Configuración de jornada (lo que se cuenta) ===== */
+const CFG={
+  dias:{1:['07:00','19:50'],2:['07:00','19:50'],3:['07:00','19:50'],4:['07:00','19:50'],5:['07:00','19:50'],6:['07:00','16:00'],0:null},
+  almuerzo:['11:40','12:25']
+};
+const PARADA_DET={
+  PIEZA:['Falta de componente de fibra de vidrio','Falta de asientos','Falta de componentes de almacén','Pieza con defecto de calidad','Pieza no corresponde al modelo','Otra pieza'],
+  MATERIAL:['Falta de materiales de pintura electrostática','Falta de materiales de pintura líquida','Falta de masilla / lijas','Falta de suministros','Falta de instalación de materiales','Otro material']
+};
+
+/* ===== Reloj simulado ===== */
+let speed=1, baseReal=Date.now(), baseSim=(()=>{const d=new Date();d.setSeconds(0,0);
+  if(d.getDay()===0)d.setDate(d.getDate()+1);
+  const m=d.getHours()*60+d.getMinutes(); if(m<7*60||m>19*60+20){d.setHours(9,30,0,0)}
+  return d.getTime();})();
+const now=()=>baseSim+(Date.now()-baseReal)*speed;
+function setSpeed(v){baseSim=now();baseReal=Date.now();speed=v}
+
+/* ===== Utilidades ===== */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const rhaz=(v,d=0)=>{const f=10**d;return Math.sign(v)*Math.round(Math.abs(v)*f)/f};
+const hms=ms=>{const s=Math.max(0,Math.floor(ms/1000));return `${pad(Math.floor(s/3600))}:${pad(Math.floor(s%3600/60))}:${pad(s%60)}`};
+const hm=min=>{min=Math.round(min);return min>=60?`${Math.floor(min/60)} h ${min%60} min`:`${min} min`};
+const clock=t=>{const d=new Date(t);return `${pad(d.getHours())}:${pad(d.getMinutes())}`};
+const DIAS=['dom','lun','mar','mié','jue','vie','sáb'];
+const dstamp=t=>{const d=new Date(t);return `${DIAS[d.getDay()]} ${pad(d.getDate())}/${pad(d.getMonth()+1)} ${clock(t)}`};
+const at=(day,hhmm)=>{const [h,m]=hhmm.split(':').map(Number);const d=new Date(day);d.setHours(h,m,0,0);return d.getTime()};
+const ov=(a,b,c,e)=>Math.max(0,Math.min(b,e)-Math.max(a,c));
+
+/* Tiempo laboral: solo dentro de la ventana del día, sin almuerzo */
+function laborMs(a,b){
+  if(!a||!b||b<=a)return 0;
+  const d=new Date(a);d.setHours(0,0,0,0);let t=0;
+  while(d.getTime()<b){
+    const w=CFG.dias[d.getDay()];
+    if(w){const ws=at(d,w[0]),we=at(d,w[1]);const s=Math.max(a,ws),e=Math.min(b,we);
+      if(e>s){t+=(e-s)-ov(s,e,at(d,CFG.almuerzo[0]),at(d,CFG.almuerzo[1]))}}
+    d.setDate(d.getDate()+1);
+  }return t;
+}
+function estadoReloj(t){
+  const d=new Date(t),w=CFG.dias[d.getDay()];
+  if(w&&t>=at(d,CFG.almuerzo[0])&&t<at(d,CFG.almuerzo[1]))return{k:'almuerzo',txt:`Almuerzo ${CFG.almuerzo.join('–')}: no se cuenta`};
+  if(w&&t>=at(d,w[0])&&t<at(d,w[1]))return{k:'cuenta',txt:'Contando tiempo laboral'};
+  return{k:'fuera',txt:'Fuera de horario: se reanuda a las 07:00'};
+}
+
+/* ===== Estado ===== */
+const S={view:'inicio',jobs:[],hist:[],draft:{},cur:null,f:{linea:'',modelo:'',est:'',dias:'14'}};
+const job=()=>S.jobs.find(j=>j.id===S.cur);
+const stdLinea=l=>DATA.std[l];
+const acts=j=>DATA.act[`${j.modelo}|${j.linea}|${j.estacion}`]||[];
+
+/* ===== Historial simulado para indicadores ===== */
+(function seed(){
+  let x=7;const r=()=>(x=(x*16807)%2147483647)/2147483647;const pick=a=>a[Math.floor(r()*a.length)];
+  const base=new Date(baseSim);base.setHours(0,0,0,0);
+  for(let i=0;i<120;i++){
+    const c=pick(DATA.combos);const[modelo,linea,estacion]=c;const std=stdLinea(linea);
+    const d=new Date(base);d.setDate(d.getDate()-1-Math.floor(r()*14));if(d.getDay()===0)d.setDate(d.getDate()-1);
+    const lab=Math.round(std*(0.72+r()*0.6));const durLab=Math.max(lab,std);const sobre=Math.max(durLab-std,0);
+    const av=rhaz(Math.min(100,55+r()*50),1);const nc=Math.round(durLab*(100-av)/100);
+    const par=[];const np=r()<.45?(r()<.6?1:2):0;
+    for(let k=0;k<np;k++){const tipo=r()<.55?'PIEZA':'MATERIAL';par.push({tipo,detalle:pick(PARADA_DET[tipo].slice(0,5)),min:Math.round(10+r()*70)})}
+    const mot=sobre>0?[pick(DATA.motivos)]:[];
+    const cli=pick(DATA.clientes);
+    S.hist.push({fecha:d.getTime(),modelo,linea,estacion,codigo:cli[1]+pad(Math.floor(r()*900+100)).slice(-3),std,lab,durLab,sobre,cumple:sobre===0,avance:av,noCump:nc,paradas:par,motivos:mot});
+  }
+})();
+
+/* ===== Render ===== */
+function steps(n){const L=['Selección','Trabajo','Actividades','Tiempo','Causas'];
+  return `<div class="steps" aria-label="Pasos">${L.map((l,i)=>`<span class="skew ${i+1<n?'done':i+1===n?'on':''}"><span>${i+1}. ${l}</span></span>`).join('')}</div>`}
+function bar(html){$('#bar').innerHTML=html?`<div class="bar-actions"><div class="in">${html}</div></div>`:''}
+function render(){
+  $('#tab-inicio').setAttribute('aria-pressed',S.view!=='dash');$('#tab-dash').setAttribute('aria-pressed',S.view==='dash');
+  const v={inicio:vInicio,nuevo:vNuevo,timer:vTimer,acts:vActs,tiempo:vTiempo,causas:vCausas,fin:vFin,dash:vDash}[S.view];
+  v();tick();window.scrollTo({top:0});
+}
+function toast(msg,k='ok'){const t=document.createElement('div');t.className='toast '+k;t.setAttribute('role','status');t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2600)}
+function confirmar(title,body,okTxt,cls='btn-blue'){return new Promise(res=>{
+  $('#dlgc').innerHTML=`<h2>${title}</h2><p class="muted">${body}</p><div class="acts"><button class="btn btn-ghost" data-r="0">Cancelar</button><button class="btn ${cls}" data-r="1">${okTxt}</button></div>`;
+  const d=$('#dlg');d.showModal();d.onclick=e=>{const b=e.target.closest('[data-r]');if(b){d.close();res(b.dataset.r==='1')}};
+  d.oncancel=()=>res(false);})}
+
+/* Inicio */
+function vInicio(){
+  const act=S.jobs.filter(j=>j.estado!=='COMPLETADO');
+  const cards=act.map(j=>{const st=j.paradas.find(p=>!p.fin);
+    const lab=j.estado==='EN_PROCESO'?`<span class="t" data-live="joblab" data-id="${j.id}">--:--:--</span>`:`<span class="muted" style="margin-top:auto">Pendiente: ${({PENDIENTE_ACTIVIDADES:'registrar actividades',PENDIENTE_TIEMPO:'motivos de sobretiempo',PENDIENTE_CAUSAS:'causas de incumplimiento'})[j.estado]}</span>`;
+    return `<button class="job ${st?'stopping':''}" data-act="open" data-id="${j.id}">
+      <span>${st?'<span class="skew badge b-stop"><span>En parada</span></span>':j.estado==='EN_PROCESO'?'<span class="skew badge b-run"><span>En proceso</span></span>':'<span class="skew badge b-pend"><span>Pendiente</span></span>'}</span>
+      <span class="bus">${esc(j.codigo)}</span><span class="muted">${esc(j.modelo)} · ${esc(j.linea)} · ${esc(j.estacion)}</span>${lab}</button>`}).join('');
+  const hechos=S.jobs.filter(j=>j.estado==='COMPLETADO').length;
+  $('#app').innerHTML=`<div class="narrow"><h1>Trabajos en curso</h1><p class="lead">Toca un trabajo para continuar, o inicia uno nuevo.${hechos?` Hoy completaste ${hechos}.`:''}</p>
+  ${act.length?`<div class="jobs">${cards}</div>`:`<div class="empty"><p style="font-size:20px;font-weight:700;margin:0 0 6px;color:var(--ink)">No hay trabajos en curso</p>Elige el bus y la estación para empezar a contar el tiempo.</div>`}
+  <div class="card" style="margin-top:22px"><h2>Cómo se cuenta el tiempo</h2>
+  <dl class="kv"><dt>Lunes a viernes</dt><dd>07:00 – 19:50</dd><dt>Sábado</dt><dd>07:00 – 16:00 <span class="muted">(por confirmar)</span></dd><dt>Domingo</dt><dd>No se cuenta</dd><dt>Almuerzo</dt><dd>11:40 – 12:25, no se cuenta</dd></dl>
+  <p class="muted" style="margin:10px 0 0;font-size:15px">Si un trabajo sigue después de las 19:50, el contador se detiene y continúa al día siguiente a las 07:00. Usa el reloj demo (arriba) en ×120 para verlo.</p></div></div>`;
+  bar(`<button class="btn btn-xl btn-blue" data-act="nuevo">Nuevo trabajo</button>`);
+}
+
+/* Paso 1 */
+function vNuevo(){
+  const D=S.draft;const q=(D.q||'').toLowerCase();
+  const modelos=[...new Set(DATA.combos.map(c=>c[0]))];
+  const lineas=D.modelo?[...new Set(DATA.combos.filter(c=>c[0]===D.modelo).map(c=>c[1]))]:[];
+  const ests=D.linea?DATA.combos.filter(c=>c[0]===D.modelo&&c[1]===D.linea).map(c=>c[2]):[];
+  const cl=DATA.clientes.filter(c=>!q||c[0].toLowerCase().includes(q)||c[1].toLowerCase().includes(q));
+  const sig=D.cliente?D.cliente[1]:'';const num=D.num||'';
+  const resp=D.estacion?DATA.resp[`${D.linea}|${D.estacion}`]:null;
+  const codigo=sig+num;const dup=num.length===3&&D.estacion&&isDup(codigo,D.estacion);
+  const ok=D.cliente&&D.modelo&&D.linea&&D.estacion&&/^\d{3}$/.test(num)&&!dup;
+  $('#app').innerHTML=`<div class="narrow">${steps(1)}<h1>Elige el bus y la estación</h1><p class="lead">Al tocar Iniciar empieza a correr el tiempo.</p>
+  <div class="field"><div class="lab">Cliente <em>${DATA.clientes.length} clientes</em></div>
+    ${D.cliente?`<div class="picked"><span>${esc(D.cliente[0])} <span class="muted">(${esc(D.cliente[1])})</span></span><button data-act="d-clear" data-k="cliente">Cambiar</button></div>`:
+    `<input class="search" id="q" placeholder="Buscar cliente o sigla" value="${esc(D.q||'')}" autocomplete="off">
+    <div class="chips small">${cl.map(c=>`<button class="chip" data-act="d-cli" data-v="${esc(c[0])}">${esc(c[0])}</button>`).join('')||'<p class="muted">Sin coincidencias</p>'}</div>`}</div>
+  <div class="field"><div class="lab">Modelo</div><div class="chips">${modelos.map(m=>`<button class="chip" aria-pressed="${D.modelo===m}" data-act="d-set" data-k="modelo" data-v="${esc(m)}">${esc(m)}</button>`).join('')}</div></div>
+  ${D.modelo?`<div class="field"><div class="lab">Línea</div><div class="chips">${lineas.map(m=>`<button class="chip" aria-pressed="${D.linea===m}" data-act="d-set" data-k="linea" data-v="${esc(m)}">${esc(m)}</button>`).join('')}</div></div>`:''}
+  ${D.linea?`<div class="field"><div class="lab">Estación</div><div class="chips">${ests.map(m=>`<button class="chip" aria-pressed="${D.estacion===m}" data-act="d-set" data-k="estacion" data-v="${esc(m)}">${esc(m)}</button>`).join('')}</div></div>`:''}
+  <div class="field"><div class="lab">Número de bus <em>3 dígitos</em></div>
+    <div class="busrow"><div class="keypad">${[1,2,3,4,5,6,7,8,9].map(n=>`<button data-act="k" data-v="${n}">${n}</button>`).join('')}<button data-act="k" data-v="C" aria-label="Borrar todo">C</button><button data-act="k" data-v="0">0</button><button data-act="k" data-v="B" aria-label="Borrar último">⌫</button></div>
+    <div><div class="code"><div class="muted" style="font-size:15px">Código de bus</div><div class="big">${esc(sig)||'<i>--</i>'}${esc(num)}<i>${'_'.repeat(3-num.length)}</i></div></div>
+    ${dup?`<p class="err">Este Código Bus ya fue registrado en esta estación.</p>`:''}
+    ${D.estacion?`<dl class="kv" style="margin-top:14px"><dt>Responsable</dt><dd>${esc(resp||'Sin responsable asignado')}</dd><dt>Hora estándar ${esc(D.linea)}</dt><dd>${hm(stdLinea(D.linea))}</dd></dl>`:''}</div></div></div></div>`;
+  const qi=$('#q');if(qi){qi.oninput=e=>{S.draft.q=e.target.value;const p=e.target.selectionStart;vNuevo();const n=$('#q');n.focus();n.setSelectionRange(p,p)}}
+  bar(`<button class="btn btn-ghost" style="flex:0 0 auto" data-act="tab" data-v="inicio">Volver</button><button class="btn btn-xl btn-blue" data-act="iniciar" ${ok?'':'disabled'}>Iniciar</button>`);
+}
+function isDup(codigo,est){return S.jobs.some(j=>j.codigo===codigo&&j.estacion===est)||S.hist.some(h=>h.codigo===codigo&&h.estacion===est)}
+
+/* Paso 2 */
+function vTimer(){
+  const j=job();const st=j.paradas.find(p=>!p.fin);
+  $('#app').innerHTML=`<div class="narrow">${steps(2)}
+  <div class="stage">
+    <div class="stage-head"><div><div class="bus">${esc(j.codigo)}</div><div class="muted">${esc(j.cliente)} · ${esc(j.modelo)} · ${esc(j.linea)} · ${esc(j.estacion)}</div></div>
+      <dl class="kv"><dt>Inicio</dt><dd>${dstamp(j.inicio)}</dd><dt>Responsable</dt><dd>${esc(j.resp||'—')}</dd></dl></div>
+    <div class="band" id="band"><div class="timer-lab">Tiempo laboral contado</div><div class="timer" data-live="lab">00:00:00</div>
+      <span class="state skew badge" id="stchip"><span data-live="state"></span></span></div>
+    ${st?`<div class="stopband" role="status"><div><div style="font-weight:700">Parada por ${st.tipo==='PIEZA'?'pieza':'material'}</div><div>${esc(st.detalle)}</div></div><div class="st" data-live="stop" style="margin-left:auto">00:00:00</div></div>`:''}
+    <div class="meter"><div class="track"><div class="fill" data-live="fill" style="width:0"></div></div>
+      <div class="row"><span>Estándar ${esc(j.linea)}: <b>${hm(j.std)}</b></span><span data-live="over"></span><span>Tiempo real: <b data-live="real"></b></span></div></div>
+  </div>
+  ${j.paradas.length?`<div class="card" style="margin-top:14px"><h2>Paradas registradas</h2><ul class="stoplist">${j.paradas.map(p=>`<li><span><span class="tag">${p.tipo==='PIEZA'?'Pieza':'Material'}</span> ${esc(p.detalle)}${p.nota?` <span class="muted">· ${esc(p.nota)}</span>`:''}</span><span>${clock(p.inicio)} – ${p.fin?clock(p.fin):'en curso'} · <b>${p.fin?hm(laborMs(p.inicio,p.fin)/60000):'…'}</b></span></li>`).join('')}</ul></div>`:''}
+  </div>`;
+  bar(st?`<button class="btn btn-xl btn-yellow" data-act="parada-fin">Terminar parada</button>`
+        :`<button class="btn btn-xl btn-yellow" data-act="parada">Registrar parada</button><button class="btn btn-xl btn-red" data-act="finalizar">Finalizar</button>`);
+}
+
+/* Paso 3 */
+function vActs(){
+  const j=job();const A=acts(j);j.sel=j.sel||new Set();
+  const tot=A.reduce((s,a)=>s+a[1],0),sel=A.filter(a=>j.sel.has(a[0])).reduce((s,a)=>s+a[1],0);
+  const pct=tot?rhaz(sel/tot*100,1):0;
+  $('#app').innerHTML=`<div class="narrow">${steps(3)}<h1>Marca las actividades realizadas</h1><p class="lead">${esc(j.modelo)} - ${esc(j.linea)} - ${esc(j.estacion)} · bus ${esc(j.codigo)}</p>
+  <div class="card sticky-sum"><div class="sum">
+    <div><b>${pct}%</b><span>Avance</span></div><div><b>${hm(j.durLab)}</b><span>Duración laboral</span></div>
+    <div><b style="color:${j.sobre>0?'var(--red)':'inherit'}">${hm(j.sobre)}</b><span>Sobretiempo</span></div><div><b>${hm(j.parMin)}</b><span>En paradas</span></div></div>
+    <div class="track" style="height:10px;border-radius:5px;background:var(--surface-2);margin-top:12px;overflow:hidden"><div style="height:100%;width:${pct}%;background:var(--blue)"></div></div></div>
+  ${A.length?A.map(a=>`<button class="check" role="checkbox" aria-checked="${j.sel.has(a[0])}" data-act="chk" data-v="${esc(a[0])}"><span class="box">✓</span><span class="name">${esc(a[0])}</span><span class="min">${a[1]} min</span></button>`).join('')
+  :`<div class="empty">Esta combinación no tiene actividades configuradas. El avance quedará en 0%.<br>(En la app real esto debe definirse con el supervisor.)</div>`}</div>`;
+  bar(`<button class="btn btn-ghost" style="flex:0 0 auto" data-act="all">${A.length&&j.sel.size===A.length?'Quitar todas':'Marcar todas'}</button><button class="btn btn-xl btn-blue" data-act="reg-acts">Registrar actividades</button>`);
+}
+
+/* Paso 4 */
+function vTiempo(){
+  const j=job();j.inc=j.inc||[{m:'',p:0}];const sum=j.inc.reduce((s,r)=>s+r.p,0);
+  $('#app').innerHTML=`<div class="narrow">${steps(4)}<h1>¿Por qué hubo sobretiempo?</h1>
+  <p class="lead">Sobretiempo total: <b>${rhaz(j.sobre/60,2)} h (${j.sobre} min)</b>. Reparte el 100% entre los motivos.${j.parMin?` Este bus tuvo <b>${hm(j.parMin)}</b> en paradas.`:''}</p>
+  ${j.inc.map((r,i)=>`<div class="erow"><span class="n">${i+1}</span><div><select data-act="inc-m" data-i="${i}" aria-label="Motivo ${i+1}"><option value="">Elige un motivo</option>${DATA.motivos.map(m=>`<option ${r.m===m?'selected':''}>${esc(m)}</option>`).join('')}</select>
+    <div class="sub">Valor de tiempo = ${Math.floor(r.p/100*j.sobre/60)} h ${Math.round(r.p/100*j.sobre)%60} min</div></div>
+    <div style="display:flex;gap:8px;align-items:center"><div class="stepper"><button data-act="inc-p" data-i="${i}" data-d="-5" aria-label="Menos 5%">−</button><output>${r.p}%</output><button data-act="inc-p" data-i="${i}" data-d="5" aria-label="Más 5%">+</button></div>
+    <button class="icon-btn del" data-act="inc-del" data-i="${i}" aria-label="Eliminar motivo">✕</button></div></div>`).join('')}
+  <button class="btn btn-ghost" data-act="inc-add" style="width:100%">Agregar motivo</button>
+  <div class="total ${sum===100?'okk':'bad'}"><span>Total repartido</span><span>${sum}%</span></div></div>`;
+  bar(`<button class="btn btn-xl btn-blue" data-act="reg-inc">Registrar</button>`);
+}
+
+/* Paso 5 */
+function weights(n){const T=n*(n+1)/2;return Array.from({length:n},(_,i)=>(n-i)/T)}
+function vCausas(){
+  const j=job();j.cau=j.cau||[''];const W=weights(j.cau.length);
+  $('#app').innerHTML=`<div class="narrow">${steps(5)}<h1>Se dejaron de ejecutar ${j.noCump} minutos</h1>
+  <p class="lead">¿Cuáles fueron las principales causas? Ordénalas de la más importante a la menos importante.</p>
+  ${j.cau.map((c,i)=>{const pa=rhaz(W[i]*100,0);const mi=rhaz(j.noCump*(pa>1?pa/100:W[i]),0);
+    return `<div class="erow"><span class="n">${i+1}</span><div><select data-act="cau-m" data-i="${i}" aria-label="Causa ${i+1}"><option value="">Elige una causa</option>${DATA.motivos.map(m=>`<option ${c===m?'selected':''}>${esc(m)}</option>`).join('')}</select>
+    <div class="sub">Peso ${pa}% · impacto ${mi} min</div></div>
+    <div style="display:flex;gap:6px"><button class="icon-btn" data-act="cau-mv" data-i="${i}" data-d="-1" aria-label="Subir" ${i===0?'disabled':''}>↑</button><button class="icon-btn" data-act="cau-mv" data-i="${i}" data-d="1" aria-label="Bajar" ${i===j.cau.length-1?'disabled':''}>↓</button><button class="icon-btn del" data-act="cau-del" data-i="${i}" aria-label="Eliminar causa" ${j.cau.length<2?'disabled':''}>✕</button></div></div>`}).join('')}
+  <button class="btn btn-ghost" data-act="cau-add" style="width:100%">Agregar causa</button></div>`;
+  bar(`<button class="btn btn-xl btn-blue" data-act="reg-cau">Registrar</button>`);
+}
+
+/* Cierre */
+function vFin(){
+  const j=job();
+  $('#app').innerHTML=`<div class="narrow"><div class="stage"><div class="band"><div class="timer-lab">Registro completado</div><div class="timer" style="font-size:clamp(56px,12vw,104px)">${esc(j.codigo)}</div><div class="timer-lab">${esc(j.modelo)} · ${esc(j.linea)} · ${esc(j.estacion)}</div></div>
+  <div style="padding:20px"><div class="sum">
+   <div><b>${hm(j.durLab)}</b><span>Duración laboral</span></div><div><b>${j.cumple?'Sí':'No'}</b><span>Cumple tiempo</span></div>
+   <div><b>${j.avance}%</b><span>Avance</span></div><div><b>${j.paradas.length}</b><span>Paradas (${hm(j.parMin)})</span></div></div></div></div></div>`;
+  bar(`<button class="btn btn-ghost" data-act="tab" data-v="dash">Ver indicadores</button><button class="btn btn-xl btn-blue" data-act="nuevo">Nuevo trabajo</button>`);
+}
+
+/* ===== Indicadores ===== */
+function dataset(){
+  const own=S.jobs.filter(j=>j.estado==='COMPLETADO').map(j=>({fecha:j.inicio,modelo:j.modelo,linea:j.linea,estacion:j.estacion,codigo:j.codigo,std:j.std,durLab:j.durLab,sobre:j.sobre,cumple:j.cumple,avance:j.avance,noCump:j.noCump,paradas:j.paradas.map(p=>({tipo:p.tipo,detalle:p.detalle,min:Math.round(laborMs(p.inicio,p.fin)/60000)})),motivos:(j.inc||[]).map(r=>r.m),nuevo:true}));
+  const lim=now()-Number(S.f.dias)*864e5;
+  return [...own,...S.hist].filter(r=>r.fecha>=lim&&(!S.f.linea||r.linea===S.f.linea)&&(!S.f.modelo||r.modelo===S.f.modelo)&&(!S.f.est||r.estacion===S.f.est));
+}
+function vDash(){
+  const R=dataset();const n=R.length;const F=S.f;
+  const cumple=n?Math.round(R.filter(r=>r.cumple).length/n*100):0;
+  const sob=R.reduce((s,r)=>s+r.sobre,0),av=n?rhaz(R.reduce((s,r)=>s+r.avance,0)/n,1):0;
+  const P=R.flatMap(r=>r.paradas);const pMin=P.reduce((s,p)=>s+p.min,0);
+  const pz=P.filter(p=>p.tipo==='PIEZA').reduce((s,p)=>s+p.min,0),mt=pMin-pz;
+  // por estación
+  const byE={};R.forEach(r=>{const e=byE[r.estacion]||(byE[r.estacion]={si:0,no:0});r.cumple?e.si++:e.no++});
+  const E=Object.entries(byE).sort((a,b)=>a[0].localeCompare(b[0],'es',{numeric:true}));const maxE=Math.max(1,...E.map(e=>e[1].si+e[1].no));
+  // detalle paradas
+  const byD={};P.forEach(p=>{const k=p.detalle;byD[k]=byD[k]||{min:0,tipo:p.tipo};byD[k].min+=p.min});
+  const Dd=Object.entries(byD).sort((a,b)=>b[1].min-a[1].min).slice(0,6);const maxD=Math.max(1,...Dd.map(d=>d[1].min));
+  // motivos sobretiempo
+  const byM={};R.forEach(r=>r.motivos.forEach(m=>{if(m)byM[m]=(byM[m]||0)+1}));
+  const M=Object.entries(byM).sort((a,b)=>b[1]-a[1]).slice(0,6);const maxM=Math.max(1,...M.map(m=>m[1]));
+  // tendencia diaria
+  const days=Number(F.dias);const T=[];const b0=new Date(now());b0.setHours(0,0,0,0);
+  for(let i=days-1;i>=0;i--){const d=new Date(b0);d.setDate(d.getDate()-i);const e=d.getTime()+864e5;const rr=R.filter(r=>r.fecha>=d.getTime()&&r.fecha<e);T.push({d,sob:rr.reduce((s,r)=>s+r.sobre,0)/60,par:rr.reduce((s,r)=>s+r.paradas.reduce((a,p)=>a+p.min,0),0)/60})}
+  const modelos=[...new Set(DATA.combos.map(c=>c[0]))];
+  const sel=(k,opts,lbl)=>`<select data-act="f" data-k="${k}" aria-label="${lbl}"><option value="">${lbl}: todas</option>${opts.map(o=>`<option ${F[k]===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`;
+  $('#app').innerHTML=`<h1>Indicadores de la línea</h1><p class="lead">Datos de ejemplo de los últimos días más los trabajos que completes en esta demo. Toca una estación para filtrar.</p>
+  <div class="filters">${sel('linea',Object.keys(DATA.std),'Línea')}${sel('modelo',modelos,'Modelo')}
+   <select data-act="f" data-k="dias" aria-label="Periodo"><option value="7" ${F.dias==='7'?'selected':''}>Últimos 7 días</option><option value="14" ${F.dias==='14'?'selected':''}>Últimos 14 días</option></select>
+   ${F.est?`<button class="clear" data-act="f-est" data-v="">Estación ${esc(F.est)} ✕</button>`:''}</div>
+  <div class="kpis"><div class="kpi"><b>${n}</b><span>Trabajos</span></div><div class="kpi blue"><b>${cumple}%</b><span>Cumplen tiempo</span></div>
+   <div class="kpi red"><b>${rhaz(sob/60,1)} h</b><span>Sobretiempo</span></div><div class="kpi"><b>${av}%</b><span>Avance promedio</span></div>
+   <div class="kpi yel"><b>${rhaz(pMin/60,1)} h</b><span>En paradas</span></div></div>
+  <div class="grid2"><div class="card"><h2>Cumplimiento por estación</h2><div class="legend"><span><i style="background:var(--blue)"></i>Cumple</span><span><i style="background:var(--red)"></i>No cumple</span></div>
+    <div class="hbars">${E.map(([e,v])=>`<button class="hbar" data-act="f-est" data-v="${esc(e)}" aria-pressed="${F.est===e}"><span class="lbl">${esc(e)}</span><span class="trk"><span class="seg1" style="width:${v.si/maxE*100}%"></span><span class="seg2" style="width:${v.no/maxE*100}%"></span></span><span class="val">${Math.round(v.si/(v.si+v.no)*100)}%</span></button>`).join('')||'<p class="muted">Sin datos para estos filtros.</p>'}</div></div>
+   <div class="card"><h2>Paradas: pieza o material</h2>
+    ${pMin?`<div class="split"><div style="width:${pz/pMin*100}%;background:var(--yellow);color:var(--on-yellow)">${pz?`Pieza ${Math.round(pz/pMin*100)}%`:''}</div><div style="width:${mt/pMin*100}%;background:var(--ink-2);color:var(--surface)">${mt?`Material ${Math.round(mt/pMin*100)}%`:''}</div></div>
+    <div class="hbars">${Dd.map(([d,v])=>`<div class="hbar stack"><span class="lbl">${esc(d)}</span><span class="val">${hm(v.min)}</span><span class="trk"><span class="segy" style="width:${v.min/maxD*100}%;${v.tipo==='MATERIAL'?'background:var(--ink-2)':''}"></span></span></div>`).join('')}</div>`:'<p class="muted">Sin paradas en este periodo.</p>'}</div></div>
+  <div class="grid2"><div class="card"><h2>Horas de sobretiempo y de parada por día</h2>${trend(T)}</div>
+   <div class="card"><h2>Motivos de sobretiempo más frecuentes</h2><div class="hbars">${M.map(([m,c])=>`<div class="hbar stack"><span class="lbl">${esc(m)}</span><span class="val">${c} ${c===1?'vez':'veces'}</span><span class="trk"><span class="seg2" style="width:${c/maxM*100}%"></span></span></div>`).join('')||'<p class="muted">Sin sobretiempo en este periodo.</p>'}</div></div></div>
+  <div class="card"><h2>Últimos registros</h2><div class="tscroll"><table><thead><tr><th>Fecha</th><th>Bus</th><th>Modelo</th><th>Línea</th><th>Estación</th><th>Duración</th><th>Sobretiempo</th><th>Avance</th><th>Paradas</th><th>Cumple</th></tr></thead><tbody>
+  ${R.slice().sort((a,b)=>b.fecha-a.fecha).slice(0,12).map(r=>`<tr><td>${dstamp(r.fecha).slice(0,9)}</td><td><b>${esc(r.codigo)}</b>${r.nuevo?' <span class="tag">nuevo</span>':''}</td><td>${esc(r.modelo)}</td><td>${esc(r.linea)}</td><td>${esc(r.estacion)}</td><td>${hm(r.durLab)}</td><td>${hm(r.sobre)}</td><td>${r.avance}%</td><td>${r.paradas.length}</td><td><span class="skew badge ${r.cumple?'b-ok':'b-no'}"><span>${r.cumple?'Sí':'No'}</span></span></td></tr>`).join('')}</tbody></table></div></div>`;
+  bar('');
+}
+function trend(T){
+  const W=600,H=200,p=28,mx=Math.max(1,...T.map(t=>Math.max(t.sob,t.par)));const x=i=>p+i*(W-2*p)/Math.max(1,T.length-1),y=v=>H-p-v/mx*(H-2*p);
+  const line=(k,c)=>`<polyline fill="none" stroke="${c}" stroke-width="3" stroke-linejoin="round" points="${T.map((t,i)=>`${x(i)},${y(t[k])}`).join(' ')}"/>`+T.map((t,i)=>`<circle cx="${x(i)}" cy="${y(t[k])}" r="3.5" fill="${c}"><title>${pad(t.d.getDate())}/${pad(t.d.getMonth()+1)}: ${rhaz(t[k],1)} h</title></circle>`).join('');
+  return `<div class="legend"><span><i style="background:var(--red)"></i>Sobretiempo</span><span><i style="background:var(--yellow)"></i>Paradas</span></div>
+  <svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Tendencia diaria"><line x1="${p}" x2="${W-p}" y1="${H-p}" y2="${H-p}" stroke="var(--line)"/>
+  <text x="${p}" y="14">${rhaz(mx,1)} h</text>${T.map((t,i)=>i%Math.ceil(T.length/7)===0?`<text x="${x(i)}" y="${H-8}" text-anchor="middle">${pad(t.d.getDate())}/${pad(t.d.getMonth()+1)}</text>`:'').join('')}
+  ${line('par','var(--yellow)')}${line('sob','var(--red)')}</svg>`;
+}
+
+/* ===== Tick en vivo ===== */
+function tick(){
+  const t=now();$('#clock').textContent=`${DIAS[new Date(t).getDay()]} ${clock(t)}`;
+  document.querySelectorAll('[data-live="joblab"]').forEach(el=>{const j=S.jobs.find(x=>x.id===el.dataset.id);if(j)el.textContent=hms(laborMs(j.inicio,t))});
+  if(S.view==='timer'){const j=job();if(!j)return;const lab=laborMs(j.inicio,t);const es=estadoReloj(t);
+    const q=s=>document.querySelector(`[data-live="${s}"]`);
+    q('lab').textContent=hms(lab);q('real').textContent=hms(t-j.inicio);q('state').textContent=es.txt;
+    $('#band').classList.toggle('paused',es.k!=='cuenta');$('#stchip').className='state skew badge '+(es.k==='cuenta'?'b-ok':'b-pend');
+    const min=lab/60000;const f=q('fill');f.style.width=Math.min(100,min/j.std*100)+'%';f.classList.toggle('over',min>j.std);
+    q('over').innerHTML=min>j.std?`<b style="color:var(--red)">Sobretiempo: ${hm(min-j.std)}</b>`:`Faltan ${hm(j.std-min)} para el estándar`;
+    const st=j.paradas.find(p=>!p.fin);if(st&&q('stop'))q('stop').textContent=hms(t-st.inicio);}
+}
+setInterval(tick,250);
+
+/* ===== Acciones ===== */
+function finalizarCalc(j){
+  j.fin=now();j.real=Math.round((j.fin-j.inicio)/60000);j.lab=Math.round(laborMs(j.inicio,j.fin)/60000);
+  j.durLab=Math.max(j.lab,j.std);j.sobre=Math.max(j.durLab-j.std,0);j.cumple=j.sobre===0;
+  j.parMin=Math.round(j.paradas.reduce((s,p)=>s+laborMs(p.inicio,p.fin),0)/60000);j.estado='PENDIENTE_ACTIVIDADES';
+}
+function goNext(j){
+  if(j.estado==='PENDIENTE_TIEMPO')S.view='tiempo';else if(j.estado==='PENDIENTE_CAUSAS')S.view='causas';else{S.view='fin'}
+  render();
+}
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('[data-act]');if(!b||b.tagName==='SELECT')return;const a=b.dataset.act,D=S.draft;
+  if(a==='tab'){S.view=b.dataset.v;render()}
+  else if(a==='nuevo'){S.draft={};S.view='nuevo';render()}
+  else if(a==='d-cli'){D.cliente=DATA.clientes.find(c=>c[0]===b.dataset.v);D.q='';vNuevo()}
+  else if(a==='d-clear'){delete D[b.dataset.k];vNuevo()}
+  else if(a==='d-set'){const k=b.dataset.k;D[k]=b.dataset.v;if(k==='modelo'){delete D.linea;delete D.estacion;const ls=[...new Set(DATA.combos.filter(c=>c[0]===D.modelo).map(c=>c[1]))];if(ls.length===1)D.linea=ls[0]}if(k==='linea')delete D.estacion;vNuevo()}
+  else if(a==='k'){const v=b.dataset.v;D.num=D.num||'';if(v==='C')D.num='';else if(v==='B')D.num=D.num.slice(0,-1);else if(D.num.length<3)D.num+=v;vNuevo()}
+  else if(a==='iniciar'){const codigo=D.cliente[1]+D.num;
+    if(!await confirmar('¿Iniciar el trabajo?',`Bus <b>${esc(codigo)}</b> en ${esc(D.linea)} · ${esc(D.estacion)}. El tiempo empieza a contar ahora.`,'Iniciar'))return toast('Registro cancelado','in');
+    const j={id:'j'+Date.now(),cliente:D.cliente[0],sigla:D.cliente[1],modelo:D.modelo,linea:D.linea,estacion:D.estacion,num:D.num,codigo,resp:DATA.resp[`${D.linea}|${D.estacion}`],std:stdLinea(D.linea),inicio:now(),paradas:[],estado:'EN_PROCESO'};
+    S.jobs.push(j);S.cur=j.id;S.view='timer';render();toast('Tiempo en marcha')}
+  else if(a==='open'){S.cur=b.dataset.id;const j=job();S.view={EN_PROCESO:'timer',PENDIENTE_ACTIVIDADES:'acts',PENDIENTE_TIEMPO:'tiempo',PENDIENTE_CAUSAS:'causas'}[j.estado];render()}
+  else if(a==='parada'){paradaDlg()}
+  else if(a==='parada-fin'){const st=job().paradas.find(p=>!p.fin);if(await confirmar('¿Terminar la parada?',`${esc(st.detalle)} · ${hms(now()-st.inicio)}`,'Terminar parada','btn-yellow')){st.fin=now();vTimer();toast('Parada cerrada')}}
+  else if(a==='finalizar'){const j=job();if(!await confirmar('¿Finalizar el trabajo?',`Bus <b>${esc(j.codigo)}</b> en ${esc(j.estacion)}. Tiempo laboral: <b>${hms(laborMs(j.inicio,now()))}</b>.`,'Finalizar','btn-red'))return toast('Registro cancelado','in');
+    finalizarCalc(j);S.view='acts';render()}
+  else if(a==='chk'){const j=job();const v=b.dataset.v;j.sel.has(v)?j.sel.delete(v):j.sel.add(v);const y=window.scrollY;vActs();window.scrollTo(0,y)}
+  else if(a==='all'){const j=job();const A=acts(j);j.sel=j.sel.size===A.length?new Set():new Set(A.map(x=>x[0]));const y=window.scrollY;vActs();window.scrollTo(0,y)}
+  else if(a==='reg-acts'){const j=job();if(!await confirmar('¿Confirmas el registro de actividades?',`${j.sel.size} de ${acts(j).length} actividades marcadas.`,'Registrar'))return toast('Registro cancelado','in');
+    const A=acts(j),tot=A.reduce((s,x)=>s+x[1],0),sel=A.filter(x=>j.sel.has(x[0])).reduce((s,x)=>s+x[1],0);
+    j.avance=tot?rhaz(sel/tot*100,1):0;const p=rhaz(Math.max(sel,0)/Math.max(tot,1)*100,1);j.noCump=rhaz(j.durLab*(100-p)/100,0);
+    j.estado=j.sobre>0?'PENDIENTE_TIEMPO':j.noCump>0?'PENDIENTE_CAUSAS':'COMPLETADO';if(j.estado==='COMPLETADO')toast('Registro enviado');goNext(j)}
+  else if(a==='inc-p'){const r=job().inc[b.dataset.i];r.p=Math.min(100,Math.max(0,r.p+Number(b.dataset.d)));vTiempo()}
+  else if(a==='inc-add'){job().inc.push({m:'',p:0});vTiempo()}
+  else if(a==='inc-del'){const j=job();j.inc.splice(b.dataset.i,1);if(!j.inc.length)j.inc.push({m:'',p:0});vTiempo()}
+  else if(a==='reg-inc'){const j=job();const I=j.inc;
+    if(I.some(r=>!r.m||!r.p))return toast('Cada fila necesita un motivo y un porcentaje','er');
+    if(new Set(I.map(r=>r.m)).size!==I.length)return toast('No se pueden registrar motivos repetidos','er');
+    if(I.reduce((s,r)=>s+r.p,0)!==100)return toast('Los porcentajes deben sumar 100%','er');
+    if(!await confirmar('¿Confirmas el registro de incidencias de tiempo?',`${I.length} motivo(s) para ${j.sobre} min de sobretiempo.`,'Registrar'))return toast('Registro cancelado','in');
+    j.estado=j.noCump>0?'PENDIENTE_CAUSAS':'COMPLETADO';toast('Registro enviado');goNext(j)}
+  else if(a==='cau-add'){job().cau.push('');vCausas()}
+  else if(a==='cau-del'){const c=job().cau;if(c.length>1){c.splice(b.dataset.i,1);vCausas()}}
+  else if(a==='cau-mv'){const c=job().cau,i=+b.dataset.i,k=i+Number(b.dataset.d);[c[i],c[k]]=[c[k],c[i]];vCausas()}
+  else if(a==='reg-cau'){const c=job().cau;
+    if(c.some(x=>!x))return toast('Elige una causa en cada fila','er');
+    if(new Set(c).size!==c.length)return toast('No se pueden registrar causas repetidas','er');
+    if(!await confirmar('¿Confirmas el registro de causas de incumplimiento?',`${c.length} causa(s), de la más a la menos importante.`,'Registrar'))return toast('Registro cancelado','in');
+    job().estado='COMPLETADO';toast('Registro guardado correctamente');goNext(job())}
+  else if(a==='f-est'){S.f.est=S.f.est===b.dataset.v?'':b.dataset.v;vDash()}
+});
+document.addEventListener('change',e=>{const t=e.target,a=t.dataset.act;
+  if(a==='inc-m'){job().inc[t.dataset.i].m=t.value;vTiempo()}
+  else if(a==='cau-m'){job().cau[t.dataset.i]=t.value;vCausas()}
+  else if(a==='f'){S.f[t.dataset.k]=t.value;vDash()}
+  else if(t.id==='speed'){setSpeed(Number(t.value));tick()}
+});
+
+function paradaDlg(){
+  const P={tipo:'',detalle:'',nota:''};const d=$('#dlg');
+  const draw=()=>{$('#dlgc').innerHTML=`<h2>Registrar parada</h2><p class="muted">El tiempo de la parada empieza a contar al tocar Iniciar parada.</p>
+    <div class="seg"><button data-t="PIEZA" aria-pressed="${P.tipo==='PIEZA'}">Pieza</button><button data-t="MATERIAL" aria-pressed="${P.tipo==='MATERIAL'}">Material</button></div>
+    ${P.tipo?`<div class="field" style="margin-bottom:12px"><label for="pd">¿Qué ${P.tipo==='PIEZA'?'pieza':'material'}?</label><select id="pd" class="search" style="margin:0">${['',...PARADA_DET[P.tipo]].map(x=>`<option ${P.detalle===x?'selected':''} value="${esc(x)}">${x?esc(x):'Elige una opción'}</option>`).join('')}</select></div>
+    <label for="pn" style="font-weight:700">Comentario <span class="muted" style="font-weight:500">(opcional)</span></label><textarea id="pn" placeholder="Ej.: guardafango derecho, falta masilla poliéster">${esc(P.nota)}</textarea>`:''}
+    <div class="acts"><button class="btn btn-ghost" data-x="0">Cancelar</button><button class="btn btn-yellow" data-x="1" ${P.tipo&&P.detalle?'':'disabled'}>Iniciar parada</button></div>`;
+    const s=$('#pd');if(s)s.onchange=()=>{P.detalle=s.value;P.nota=($('#pn')||{}).value||'';draw()};};
+  draw();d.showModal();d.oncancel=null;
+  d.onclick=ev=>{const t=ev.target.closest('[data-t]');if(t){P.tipo=t.dataset.t;P.detalle='';draw();return}
+    const x=ev.target.closest('[data-x]');if(!x)return;
+    if(x.dataset.x==='1'){P.nota=$('#pn').value.trim();job().paradas.push({...P,inicio:now(),fin:null});d.close();vTimer();toast('Parada en curso')}else d.close()};
+}
+$('#speed').value='1';
+render();
+</script>
+</body></html>
