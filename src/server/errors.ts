@@ -55,7 +55,8 @@ export function toErrorResponse(err: unknown, log?: Logger): NextResponse<ErrorB
       {
         error: {
           code: 'VALIDACION',
-          message: 'Datos inválidos',
+          // Primer mensaje en texto del operario (p. ej. "Debe ingresar exactamente 3 dígitos…").
+          message: err.issues[0]?.message ?? 'Datos inválidos',
           details: err.issues.map((i) => ({ path: i.path.join('.'), message: i.message })),
         },
       },

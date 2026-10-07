@@ -301,6 +301,20 @@ export async function listaActividades(id: string) {
 }
 
 export async function registrarActividades(id: string, realizadas: string[]) {
+  return conConflicto(() => registrarActividadesTx(id, realizadas));
+}
+
+/** Dos tablets registrando a la vez: el índice único (produccion, actividad) frena la segunda. */
+async function conConflicto<T>(fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (e) {
+    if (esUnico(e)) throw new AppError('CONFLICTO', MSG_CAMBIO_CONCURRENTE);
+    throw e;
+  }
+}
+
+async function registrarActividadesTx(id: string, realizadas: string[]) {
   return prisma.$transaction(async (tx) => {
     const p = await cargar(tx, id);
     exigirEstado(p.estado, 'PENDIENTE_ACTIVIDADES');
