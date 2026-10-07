@@ -19,7 +19,23 @@ Reconstrucción como app web de una app Power Apps que registra el tiempo de tra
 - Textos de la interfaz en español, simples, pensados para operarios en tablet.
 
 ## Comandos del proyecto
-(Claude Code: completa esta sección en la Fase 2 con los comandos reales: instalar, levantar BD, migrar, sembrar, dev, test, e2e, lint, build.)
+Requisitos: Node 22 (`.nvmrc`), npm, Docker (para PostgreSQL).
+
+| Acción | Comando |
+|---|---|
+| Instalar dependencias | `npm install` |
+| Variables de entorno | `cp .env.example .env` y completar `AUTH_SECRET` |
+| Levantar BD (solo PostgreSQL) | `docker compose up -d db` |
+| Migrar | _(Fase 3)_ |
+| Sembrar / importar Excel | _(Fase 3)_ |
+| Desarrollo | `npm run dev` → http://localhost:3000 |
+| Pruebas unitarias | `npm test` (`npm run test:watch` en modo observación) |
+| E2E | _(Fase 7, Playwright)_ |
+| Lint / formato / tipos | `npm run lint` · `npm run format:check` · `npm run typecheck` |
+| Todo lo anterior junto | `npm run check` |
+| Build de producción | `npm run build` |
+| App + BD en contenedores | `docker compose up --build` |
+| Salud del servicio | `GET /api/v1/health` → `{ status, serverNow }` |
 
 ## Diseño (resumen)
 Blanco/plomo; azul MODASA #1E388F = acción/cumple; amarillo #FFD200 = paradas; rojo #D3141B = finalizar/sobretiempo/no cumple. Barlow / Barlow Condensed. Botones táctiles ≥ 56 px. Tablet primero.

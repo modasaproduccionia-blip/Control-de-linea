@@ -1,0 +1,40 @@
+# Desarrollo: `docker compose up -d db` levanta solo PostgreSQL y la app se corre con `npm run dev`.
+# Todo en contenedores: `docker compose up --build`.
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: control
+      POSTGRES_PASSWORD: control
+      POSTGRES_DB: control_linea
+      TZ: UTC
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U control -d control_linea']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://control:control@db:5432/control_linea
+      AUTH_SECRET: ${AUTH_SECRET:?Defina AUTH_SECRET en .env}
+      AUTH_URL: ${AUTH_URL:-http://localhost:3000}
+      APP_TIMEZONE: America/Lima
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      SESSION_MAX_AGE_HOURS: ${SESSION_MAX_AGE_HOURS:-12}
+    ports:
+      - '3000:3000'
+
+volumes:
+  pgdata:

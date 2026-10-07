@@ -1,0 +1,124 @@
+@import 'tailwindcss';
+
+/*
+ * Tokens de diseño (PROMPT_MAESTRO §4 y prototipo). Azul = acción/cumple, amarillo = paradas,
+ * rojo = finalizar/sobretiempo/no cumple. Sin verde.
+ */
+:root {
+  --bg: #e4e7eb;
+  --surface: #ffffff;
+  --surface-2: #f2f4f6;
+  --line: #d0d6dd;
+  --line-2: #b9c1ca;
+  --ink: #1d232b;
+  --ink-2: #56616d;
+  --ink-3: #8a949f;
+  --blue: #1e388f;
+  --blue-2: #2c4fbf;
+  --blue-soft: #e3e8f6;
+  --yellow: #ffd200;
+  --yellow-soft: #fff6cc;
+  --yellow-ink: #5a4a00;
+  --red: #d3141b;
+  --red-soft: #fbe3e4;
+  --on-blue: #ffffff;
+  --on-red: #ffffff;
+  --on-yellow: #1d232b;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #15191e;
+    --surface: #1f252c;
+    --surface-2: #262d35;
+    --line: #333c46;
+    --line-2: #46515c;
+    --ink: #eef1f4;
+    --ink-2: #a9b3bd;
+    --ink-3: #7c8792;
+    --blue: #5b7be6;
+    --blue-2: #7a95f0;
+    --blue-soft: #232e4d;
+    --yellow-soft: #3a3315;
+    --yellow-ink: #ffe680;
+    --red: #f0444a;
+    --red-soft: #43211f;
+    --on-blue: #0e1530;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg: #15191e;
+  --surface: #1f252c;
+  --surface-2: #262d35;
+  --line: #333c46;
+  --line-2: #46515c;
+  --ink: #eef1f4;
+  --ink-2: #a9b3bd;
+  --ink-3: #7c8792;
+  --blue: #5b7be6;
+  --blue-2: #7a95f0;
+  --blue-soft: #232e4d;
+  --yellow-soft: #3a3315;
+  --yellow-ink: #ffe680;
+  --red: #f0444a;
+  --red-soft: #43211f;
+  --on-blue: #0e1530;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-line-2: var(--line-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-modasa-blue: var(--blue);
+  --color-modasa-blue-2: var(--blue-2);
+  --color-modasa-blue-soft: var(--blue-soft);
+  --color-modasa-yellow: var(--yellow);
+  --color-modasa-yellow-soft: var(--yellow-soft);
+  --color-modasa-yellow-ink: var(--yellow-ink);
+  --color-modasa-red: var(--red);
+  --color-modasa-red-soft: var(--red-soft);
+  --color-on-blue: var(--on-blue);
+  --color-on-red: var(--on-red);
+  --color-on-yellow: var(--on-yellow);
+  --font-sans: var(--font-barlow), system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-condensed: var(--font-barlow-condensed), 'Arial Narrow', system-ui, sans-serif;
+  --radius-card: 14px;
+  --radius-control: 10px;
+  /* Objetivo táctil mínimo para operarios con guantes. */
+  --spacing-touch: 56px;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 17px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 3px solid var(--blue-2);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
